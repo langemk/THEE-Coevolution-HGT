@@ -28,36 +28,47 @@ In this notebook, we are implementing simulations of evolutionary rescue by a si
 ## Simulate one generation of population size change
 We want to observe the numbers of wild-type and mutant individuals over time. As first step, we simulate one generation of the population. At time $t$, the population has $N_B_wt$ wild-type individuals and $N_B_r$ mutant individuals. First, these reproduce. This is modeled by drawing a Poisson random variable according to the expected absolute number $N_B_wt \cdot (1-r)$ of wild-type individuals, where $r$ is the decay rate of the wild type, and $N_B_r \cdot (1-r+s)$ of mutant individuals, where $s$ is the selective advantage of the mutant over the wild time. Then mutation from $a$ to $A$ occurs as a Poisson random variable according to the given mutation rate. This defines the composition of the population at time $t+1$.
 ```{r one generation}
-simulate_one_gen <- function(N_B_wt, N_B_r, decay_rate, sel_coeff, mut_rate_r) {
-  # draw offspring according to Poisson distribution
-  offsp_a <- rpois(1, N_B_wt * (1-decay_rate))
-  offsp_A <- rpois(1, N_B_r * (1-decay_rate+sel_coeff))
+simulate_one_gen <- function(N_wt, N_r, N_s, infection_prob, symbiosis_prob, induction_prob, mut_rate, cost_r, growth_rate) {
+  # wt bacteria either get infected (& die) or do symbiosis
+  n_infected <- rpois(1, N_wt * infection_prob)
+  n_symbiotic <- rpois(1, N_wt * symbiosis_prob)
+  
+  # fraction of symbiotic that die from induction
+  n_inducted <-rpois(1, N_s * induction_prob)
+  
+  # all offspring with same growth rate 
+  offsp_wt <- rpois(1, growth_rate * N_wt)
+  offsp_s <- rpois(1, growth_rate * N_s)
+  offsp_r <- rpois(1, growth_rate * N_r)
+  
   # draw new mutants according to Poisson distribution
-  mut_a_to_A <- rpois(1, offsp_a * mut_rate_r)
+  mut_wt_to_r <- rpois(1, offsp_wt * mut_rate)
   
   # determine new population sizes of wild type and mutant
-  N_a_new <- max(offsp_a - mut_a_to_A, 0)
-  N_A_new <-  offsp_A + mut_a_to_A
+  N_wt_new <- max(offsp_wt - n_infected - n_symbiotic - mut_wt_to_r, 0)
+  # cost_r affects offsprings (1-cost)
+  N_r_new <-  max(((1 - cost_r) * offsp_r) + mut_wt_to_r, 0)
+  N_s_new <- max(n_symbiotic + offsp_s - n_inducted, 0)
   
-  return(c(N_a_new, N_A_new))
+  return(c(N_wt_new, N_r_new, N_s_new))
 }
 # Test the function
-print(simulate_one_gen(100,0,0.1,0.2,0.01))
+print(simulate_one_gen(100,0,0,0.1,0.1,0.1,0.01,0.05,0.8))
 ``` 
 
 ## Simulate a population trajectory
 We can now track the dynamics of the population from one generation to another, but this is not enough. We want to follow the population from time 0 until it either is rescued or goes extinct. This is what the following function does.
 ```{r population trajectory}
-simulate_pop <- function(N_init_B_wt, N_init_B_r, decay_rate, sel_coeff, mut_rate_r, t_max) {
+simulate_pop <- function(N_init_wt, N_init_r, N_init_s, infection_prob, induction_prob, symbiosis_prob, cost_r, growth_rate, mut_rate, t_max) {
   # Create the vector in which to save the results
-  pop_vector <- c(N_init_B_wt, N_init_B_r)
+  pop_vector <- c(N_init_wt, N_init_r, N_init_s)
   # initiate the variables
-  pop_new <- c(N_init_B_wt, N_init_B_r)
+  pop_new <- c(N_init_wt, N_init_r, N_init_s) 
   
   # run the simulation until generation t_max
   for (i in 1:t_max) {
     # redefine the current population one generation later
-    pop_new <- simulate_one_gen(pop_new[1],pop_new[2], decay_rate, sel_coeff, mut_rate_r)
+    pop_new <- simulate_one_gen(pop_new[1],pop_new[2], pop_new[3], decay_rate, sel_coeff, mut_rate_r)
     # add the new population sizes to the output vector
     pop_vector <- rbind(pop_vector,pop_new)
     # condition to stop the simulation before t_max: either the population exceeds 1.5 times the original population size, or it goes extinct
