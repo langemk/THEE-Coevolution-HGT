@@ -1,13 +1,8 @@
 ---
-<<<<<<< Updated upstream
-title: "Bacteria Evolutionary Rescue with Endosymbiosis"
-author: "Claudia Bank"
-date: "2026-10-13"
-=======
-title: "Basic model of evolutionary rescue in discrete time"
+
+title: "Bacteria Evolutionary Rescue: Resistance or Endosymbiosis"
 author: "Aylin & Marika"
 date: "2026-10-15"
->>>>>>> Stashed changes
 output:
   html_document:
     df_print: paged
