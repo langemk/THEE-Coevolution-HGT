@@ -1,7 +1,13 @@
 ---
+<<<<<<< Updated upstream
 title: "Bacteria Evolutionary Rescue with Endosymbiosis"
 author: "Claudia Bank"
 date: "2026-10-13"
+=======
+title: "Basic model of evolutionary rescue in discrete time"
+author: "Aylin & Marika"
+date: "2026-10-15"
+>>>>>>> Stashed changes
 output:
   html_document:
     df_print: paged
@@ -22,6 +28,7 @@ In this notebook, we are implementing simulations of evolutionary rescue by a si
 - `sel_coeff` selective advantage of the mutant over the wild type (should be >decay_rate to allow for evolutionary rescue)
 - `mut_rate_r` mutation rate from the wild type to the resistant genotype (should be >0 and small)
 - `t_max` number of generations after which to stop the simulation (should be an integer >0; this is not a model parameter but a setting for the simulations). In the code presented here, the simulation stops automatically if the population goes extinct, or if it recovers and exceeds 1.5 times the original total population size, so `t_max` can be set to a large value without creating extremely long simulation times.
+
 
 ## Simulate one generation of population size change
 We want to observe the numbers of wild-type and mutant individuals over time. As first step, we simulate one generation of the population. At time $t$, the population has $N_B_wt$ wild-type individuals and $N_B_r$ mutant individuals. First, these reproduce. This is modeled by drawing a Poisson random variable according to the expected absolute number $N_B_wt \cdot (1-r)$ of wild-type individuals, where $r$ is the decay rate of the wild type, and $N_B_r \cdot (1-r+s)$ of mutant individuals, where $s$ is the selective advantage of the mutant over the wild time. Then mutation from $a$ to $A$ occurs as a Poisson random variable according to the given mutation rate. This defines the composition of the population at time $t+1$.
