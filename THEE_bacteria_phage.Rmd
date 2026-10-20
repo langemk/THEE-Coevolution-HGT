@@ -39,29 +39,37 @@ In this notebook, we are implementing simulations of evolutionary rescue by a si
 We want to observe the numbers of wild-type and mutant individuals over time. As first step, we simulate one generation of the population. At time $t$, the population has $N_B_wt$ wild-type individuals and $N_B_r$ mutant individuals. First, these reproduce. This is modeled by drawing a Poisson random variable according to the expected absolute number $N_B_wt \cdot (1-r)$ of wild-type individuals, where $r$ is the decay rate of the wild type, and $N_B_r \cdot (1-r+s)$ of mutant individuals, where $s$ is the selective advantage of the mutant over the wild time. Then mutation from $a$ to $A$ occurs as a Poisson random variable according to the given mutation rate. This defines the composition of the population at time $t+1$.
 ```{r one generation}
 simulate_one_gen <- function(N_wt, N_r, N_s, infection_prob, symbiosis_prob, induction_prob, mut_rate, cost_r, growth_rate) {
- 
+  
+  # fraction of symbiotic that die from induction
+  n_inducted <-rpois(1, N_s * induction_prob)
+  
+  # fraction of wt that die from infection
+  n_infected <-rpois(1, N_wt* infection_prob)
+  
+  
   # all offspring with same growth rate 
-  offsp_wt <- rpois(1, growth_rate * N_wt)
-  offsp_s <- rpois(1, growth_rate * N_s)
+  offsp_wt <- rpois(1, growth_rate * (N_wt - n_infected))
+  offsp_s <- rpois(1, growth_rate * (N_s - n_inducted))
   offsp_r <- rpois(1, growth_rate * N_r)
   
   # draw new mutants according to Poisson distribution
   mut_wt_to_r <- rpois(1, offsp_wt * mut_rate)
   
-   # wt bacteria either get infected (& die) or do symbiosis
-  n_infected <- rpois(1, N_wt * infection_prob)
-  n_symbiotic <- rpois(1, N_wt * symbiosis_prob)
+   # wt bacteria either get infected (& die) or do symbiosis or stay
+  prob_wt = 1-mut_rate - symbiosis_prob
+  outcome = rmultinom(1,offsp_wt,c(mut_rate,symbiosis_prob,prob_wt))
+  n_resistant = outcome[1]
+  n_symbiotic = outcome[2]
+  n_wt = outcome[3]
+
   
-  # fraction of symbiotic that die from induction
-  n_inducted <-rpois(1, N_s * induction_prob)
-  
-  
+
   # determine new population sizes of wild type and mutant
-  N_wt_new <- max(offsp_wt - n_infected - n_symbiotic - mut_wt_to_r, 0)
+  N_wt_new <- max(n_wt - n_infected, 0)
   # cost_r affects offsprings (1-cost)
   N_r_new <-  max(((1 - cost_r) * offsp_r) + mut_wt_to_r, 0)
-  N_s_new <- max(n_symbiotic + offsp_s - n_inducted, 0)
-  
+  N_s_new <- max(n_symbiotic + offsp_s, 0)
+  ?
   return(c(N_wt_new, N_r_new, N_s_new))
 }
 
