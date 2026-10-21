@@ -38,7 +38,7 @@ In this notebook, we are implementing simulations of evolutionary rescue by a si
 ## Simulate one generation of population size change
 We want to observe the numbers of wild-type and mutant individuals over time. As first step, we simulate one generation of the population. At time $t$, the population has $N_B_wt$ wild-type individuals and $N_B_r$ mutant individuals. First, these reproduce. This is modeled by drawing a Poisson random variable according to the expected absolute number $N_B_wt \cdot (1-r)$ of wild-type individuals, where $r$ is the decay rate of the wild type, and $N_B_r \cdot (1-r+s)$ of mutant individuals, where $s$ is the selective advantage of the mutant over the wild time. Then mutation from $a$ to $A$ occurs as a Poisson random variable according to the given mutation rate. This defines the composition of the population at time $t+1$.
 ```{r one generation}
-simulate_one_gen <- function(N_wt, N_r, N_s, infection_prob, symbiosis_prob, induction_prob, mut_rate, cost_r, growth_rate) {
+simulate_one_gen <- function(N_wt, N_r, N_s, infection_prob, induction_prob, symbiosis_prob, mut_rate, cost_r, growth_rate) {
   
   # fraction of symbiotic that die from induction
   n_inducted <-rpois(1, N_s * induction_prob)
@@ -85,6 +85,17 @@ cost_r <- 0.1
 growth_rate <- 1
 mut_rate <- 0.1
 
+N_wt <- 1000
+N_r <- 100
+N_init_s <- 100
+infection_prob <- 0.005
+induction_prob <- 0.01
+symbiosis_prob <- 0
+cost_r <- 0
+growth_rate <- 10
+mut_rate <- 0
+
+
 
 print(simulate_one_gen(N_wt, N_r, N_s, infection_prob, symbiosis_prob, induction_prob, mut_rate, cost_r, growth_rate))
 ``` 
@@ -92,20 +103,22 @@ print(simulate_one_gen(N_wt, N_r, N_s, infection_prob, symbiosis_prob, induction
 ## Simulate a population trajectory
 We can now track the dynamics of the population from one generation to another, but this is not enough. We want to follow the population from time 0 until it either is rescued or goes extinct. This is what the following function does.
 ```{r population trajectory}
-simulate_pop <- function(N_init_wt, N_init_r, N_init_s, infection_prob, induction_prob, symbiosis_prob, cost_r, growth_rate, mut_rate, t_max) {
+simulate_pop <- function(N_init_wt, N_init_r, N_init_s, infection_prob, induction_prob, symbiosis_prob, mut_rate, cost_r, growth_rate, t_max) {
+ 
+  
   # Create the vector in which to save the results
   pop_vector <- c(N_init_wt, N_init_r, N_init_s)
   # initiate the variables
   pop_new <- c(N_init_wt, N_init_r, N_init_s) 
-  
+
   # run the simulation until generation t_max
   for (i in 1:t_max) {
     # redefine the current population one generation later
-    pop_new <- simulate_one_gen(pop_new[1],pop_new[2], pop_new[3], infection_prob, induction_prob, symbiosis_prob, cost_r, growth_rate, mut_rate)
+    pop_new <- simulate_one_gen(pop_new[1],pop_new[2], pop_new[3], infection_prob, induction_prob, symbiosis_prob, mut_rate, cost_r, growth_rate)
     # add the new population sizes to the output vector
     pop_vector <- rbind(pop_vector,pop_new)
     # condition to stop the simulation before t_max: either the population exceeds 1.5 times the original population size, or it goes extinct
-    if (pop_new[1]+pop_new[2]+pop_new[3]>=1.5*(N_init_wt+ N_init_r+N_init_s) | pop_new[1]+pop_new[2]+pop_new[3]==0) break
+    if (pop_new[1]+pop_new[2]+pop_new[3]>=3*(N_init_wt+ N_init_r+N_init_s) | pop_new[1]+pop_new[2]+pop_new[3]==0) break
   }
   
   # define the row and column names of the output vector
@@ -123,15 +136,15 @@ max_gen <- 1000
 N_init_wt <- 1000
 N_init_r <- 10
 N_init_s <- 10
-infection_prob <- 0.001
-induction_prob <- 0.001
-symbiosis_prob <- 0.05
-cost_r <- 0.001
-growth_rate <- 1
+infection_prob <- 0.0045
+induction_prob <- 0.008
+symbiosis_prob <- 0.02
+cost_r <- 0.005
+growth_rate <- 1.01
 mut_rate <- 0.01
 
 # create your simulation data
-output <- simulate_pop(N_init_wt, N_init_r, N_init_s, infection_prob, induction_prob, symbiosis_prob, cost_r, growth_rate, mut_rate, max_gen)
+output <- simulate_pop(N_init_wt, N_init_r, N_init_s, infection_prob, induction_prob, symbiosis_prob, mut_rate, cost_r, growth_rate, max_gen)
 # show the last few lines of the data table
 print(tail(output))
 # plot the output - note that the plot range and the x axis have to be adjusted based on the length of the table
