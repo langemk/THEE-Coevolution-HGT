@@ -38,32 +38,55 @@ In this notebook, we are implementing simulations of evolutionary rescue by a si
 ## Simulate one generation of population size change
 We want to observe the numbers of wild-type and mutant individuals over time. As first step, we simulate one generation of the population. At time $t$, the population has $N_B_wt$ wild-type individuals and $N_B_r$ mutant individuals. First, these reproduce. This is modeled by drawing a Poisson random variable according to the expected absolute number $N_B_wt \cdot (1-r)$ of wild-type individuals, where $r$ is the decay rate of the wild type, and $N_B_r \cdot (1-r+s)$ of mutant individuals, where $s$ is the selective advantage of the mutant over the wild time. Then mutation from $a$ to $A$ occurs as a Poisson random variable according to the given mutation rate. This defines the composition of the population at time $t+1$.
 ```{r one generation}
-simulate_one_gen <- function(N_wt, N_r, N_s, infection_prob, induction_prob, symbiosis_prob,  cost_r, growth_rate, mut_rate) 
-  # wt bacteria either get infected (& die) or do symbiosis
-  n_infected <- rpois(1, N_wt * infection_prob)
-  n_symbiotic <- rpois(1, N_wt * symbiosis_prob)
+simulate_one_gen <- function(N_wt, N_r, N_s, infection_prob, symbiosis_prob, induction_prob, mut_rate, cost_r, growth_rate) {
   
   # fraction of symbiotic that die from induction
   n_inducted <-rpois(1, N_s * induction_prob)
   
+  # fraction of wt that die from infection
+  n_infected <-rpois(1, N_wt* infection_prob)
+  
+  
   # all offspring with same growth rate 
-  offsp_wt <- rpois(1, growth_rate * N_wt)
-  offsp_s <- rpois(1, growth_rate * N_s)
+  offsp_wt <- rpois(1, growth_rate * (N_wt - n_infected))
+  offsp_s <- rpois(1, growth_rate * (N_s - n_inducted))
   offsp_r <- rpois(1, growth_rate * N_r)
   
   # draw new mutants according to Poisson distribution
   mut_wt_to_r <- rpois(1, offsp_wt * mut_rate)
   
+   # wt bacteria either get infected (& die) or do symbiosis or stay
+  prob_wt = 1-mut_rate - symbiosis_prob
+  outcome = rmultinom(1,offsp_wt,c(mut_rate,symbiosis_prob,prob_wt))
+  n_resistant = outcome[1]
+  n_symbiotic = outcome[2]
+  n_wt = outcome[3]
+
+  
+
   # determine new population sizes of wild type and mutant
-  N_wt_new <- max(offsp_wt - n_infected - n_symbiotic - mut_wt_to_r, 0)
+  N_wt_new <- max(n_wt - n_infected, 0)
   # cost_r affects offsprings (1-cost)
   N_r_new <-  max(((1 - cost_r) * offsp_r) + mut_wt_to_r, 0)
-  N_s_new <- max(n_symbiotic + offsp_s - n_inducted, 0)
-  
+  N_s_new <- max(n_symbiotic + offsp_s, 0)
+  ?
   return(c(N_wt_new, N_r_new, N_s_new))
 }
+
+
 # Test the function
-print(simulate_one_gen(100, 0, 0, 0.1, 0.1, 0.1, 0.05, 0.8, 0.01))
+N_wt <- 1000
+N_r <- 0
+N_s <- 0
+infection_prob <- 0.005
+induction_prob <- 0.01
+symbiosis_prob <- 0.05
+cost_r <- 0.1
+growth_rate <- 1
+mut_rate <- 0.1
+
+
+print(simulate_one_gen(N_wt, N_r, N_s, infection_prob, symbiosis_prob, induction_prob, mut_rate, cost_r, growth_rate))
 ``` 
 
 ## Simulate a population trajectory
@@ -78,16 +101,16 @@ simulate_pop <- function(N_init_wt, N_init_r, N_init_s, infection_prob, inductio
   # run the simulation until generation t_max
   for (i in 1:t_max) {
     # redefine the current population one generation later
-    pop_new <- simulate_one_gen(pop_new[1],pop_new[2], pop_new[3], decay_rate, sel_coeff, mut_rate_r)
+    pop_new <- simulate_one_gen(pop_new[1],pop_new[2], pop_new[3], infection_prob, induction_prob, symbiosis_prob, cost_r, growth_rate, mut_rate)
     # add the new population sizes to the output vector
     pop_vector <- rbind(pop_vector,pop_new)
     # condition to stop the simulation before t_max: either the population exceeds 1.5 times the original population size, or it goes extinct
-    if (pop_new[1]+pop_new[2]>=1.5*(N_init_B_wt+ N_init_B_r) | pop_new[1]+pop_new[2]==0) break
+    if (pop_new[1]+pop_new[2]+pop_new[3]>=1.5*(N_init_wt+ N_init_r+N_init_s) | pop_new[1]+pop_new[2]+pop_new[3]==0) break
   }
   
   # define the row and column names of the output vector
   rownames(pop_vector) <- (0:t_max)[1:length(pop_vector[,1])] # note that the vector has to be cut if the simulation stopped early
-  colnames(pop_vector) <- c("a","A")
+  colnames(pop_vector) <- c("wt","r", "s")
   # return the result
   return(pop_vector)	
 }
@@ -96,19 +119,32 @@ simulate_pop <- function(N_init_wt, N_init_r, N_init_s, infection_prob, inductio
 # Test the function and plot the result
 # set t_max to a value to be used througout
 max_gen <- 1000
+#numbers for each parameter
+N_init_wt <- 1000
+N_init_r <- 0
+N_init_s <- 0
+infection_prob <- 0.7
+induction_prob <- 0.1
+symbiosis_prob <- 0.05
+cost_r <- 0.1
+growth_rate <- 1
+mut_rate <- 0.001
+
 # create your simulation data
-output <- simulate_pop(1000,0,0.1,0.2,0.001,max_gen)
+output <- simulate_pop(N_init_wt, N_init_r, N_init_s, infection_prob, induction_prob, symbiosis_prob, cost_r, growth_rate, mut_rate, max_gen)
 # show the last few lines of the data table
 print(tail(output))
 # plot the output - note that the plot range and the x axis have to be adjusted based on the length of the table
 # determine x axis range 
 x_range <- 0:(length(output[,1])-1)
 # this plots the total population size
-plot(x_range,output[,1]+output[,2],type='l',ylim=c(0,max(output[,1]+output[,2])),xlab = "Generation",ylab = "Population size")
+plot(x_range,output[,1]+output[,2]+output[,3],type='l',ylim=c(0,max(output[,1]+output[,2]+output[,3])),xlab = "Generation",ylab = "Population size")
 # add number of wild type individuals
 lines(x_range,output[,1], col="blue")
-# add number of mutant individuals
+# add number of resistant individuals
 lines(x_range,output[,2], col="red")
+# add number of symbiotic individuals
+lines(x_range,output[,3], col="green")
 ``` 
 
 ## A small analysis
