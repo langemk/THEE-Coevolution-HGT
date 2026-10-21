@@ -55,28 +55,12 @@ simulate_one_gen <- function(N_wt, N_r, N_s, infection_prob, induction_prob, sym
   mean_r <- N_r * max(0, 1 + rho_r - r0 * N_tot / K)
   mean_s <- N_s * max(0, 1 + rho_s - r0 * N_tot / K)
   
-  # Claude imput: offspring (Poisson)
+  # Claude input: offspring (Poisson)
   offsp_wt <- rpois(1, mean_wt)
   offsp_r  <- rpois(1, mean_r)
   offsp_s  <- rpois(1, mean_s)
   
-  # fraction of symbiotic that die from induction
-  # n_inducted <-rpois(1, N_s * induction_prob)
-  # 
-  # # fraction of wt that die from infection
-  # n_infected <-rpois(1, N_wt* infection_prob)
-  # 
-  # 
-  # # all offspring with same growth rate 
-  # offsp_wt <- rpois(1, growth_rate * (N_wt - n_infected))
-  # offsp_s <- rpois(1, growth_rate * (N_s - n_inducted))
-  # offsp_r <- rpois(1, growth_rate * N_r)
-  # 
-  # #fitness cost of resistance
-  # offsp_r = (1-cost_r)*offsp_r
-  
-   # wt bacteria (offspring) either get infected (& die) or do symbiosis or stay
-  
+  # wt bacteria (offspring) either get infected (& die) or do symbiosis or stay
   prob_wt <- 1-mut_rate - symbiosis_prob
   outcome <- rmultinom(1,offsp_wt,c(mut_rate,symbiosis_prob,prob_wt))
   
@@ -84,17 +68,11 @@ simulate_one_gen <- function(N_wt, N_r, N_s, infection_prob, induction_prob, sym
   n_symbiotic <- outcome[2]
   n_wt <- outcome[3]
   
-  # Claude imput: new population sizes of wild type, resistant and symbiotes
+  # Claude input: new population sizes of wild type, resistant and symbiotes
   N_wt_new <- n_wt
   N_r_new  <- offsp_r + n_resistant
   N_s_new  <- offsp_s + n_symbiotic
 
-
-  # determine new population sizes of wild type, resistant and symbiotes
-  # N_wt_new <- max(n_wt, 0)
-  # N_s_new <- max(n_symbiotic + offsp_s, 0)
-  # N_r_new <-  max(offsp_r + n_resistant, 0)
-  
   return(c(N_wt_new, N_r_new, N_s_new))
 }
 
@@ -109,26 +87,17 @@ symbiosis_prob <- 0.05
 cost_r <- 0.1
 growth_rate <- 1
 mut_rate <- 0.1
-
-N_wt <- 1000
-N_r <- 100
-N_init_s <- 100
-infection_prob <- 0.005
-induction_prob <- 0.01
-symbiosis_prob <- 0
-cost_r <- 0
-growth_rate <- 10
-mut_rate <- 0
+K = 2000
 
 
 
-print(simulate_one_gen(N_wt, N_r, N_s, infection_prob, symbiosis_prob, induction_prob, mut_rate, cost_r, growth_rate))
+print(simulate_one_gen(N_wt, N_r, N_s, infection_prob, symbiosis_prob, induction_prob, mut_rate, cost_r, growth_rate, K))
 ``` 
 
 ## Simulate a population trajectory
 We can now track the dynamics of the population from one generation to another, but this is not enough. We want to follow the population from time 0 until it either is rescued or goes extinct. This is what the following function does.
 ```{r population trajectory}
-simulate_pop <- function(N_init_wt, N_init_r, N_init_s, infection_prob, induction_prob, symbiosis_prob, mut_rate, cost_r, growth_rate, t_max) {
+simulate_pop <- function(N_init_wt, N_init_r, N_init_s, infection_prob, induction_prob, symbiosis_prob, mut_rate, cost_r, growth_rate, t_max, K) {
  
   
   # Create the vector in which to save the results
@@ -139,7 +108,7 @@ simulate_pop <- function(N_init_wt, N_init_r, N_init_s, infection_prob, inductio
   # run the simulation until generation t_max
   for (i in 1:t_max) {
     # redefine the current population one generation later
-    pop_new <- simulate_one_gen(pop_new[1],pop_new[2], pop_new[3], infection_prob, induction_prob, symbiosis_prob, mut_rate, cost_r, growth_rate)
+    pop_new <- simulate_one_gen(pop_new[1],pop_new[2], pop_new[3], infection_prob, induction_prob, symbiosis_prob, mut_rate, cost_r, growth_rate, K)
     # add the new population sizes to the output vector
     pop_vector <- rbind(pop_vector,pop_new)
     # condition to stop the simulation before t_max: either the population exceeds 1.5 times the original population size, or it goes extinct
@@ -157,32 +126,85 @@ simulate_pop <- function(N_init_wt, N_init_r, N_init_s, infection_prob, inductio
 # Test the function and plot the result
 # set t_max to a value to be used througout
 max_gen <- 1000
-#numbers for each parameter
+# set each parameter
 N_init_wt <- 1000
 N_init_r <- 10
 N_init_s <- 10
 infection_prob <- 0.02
-induction_prob <- 0.02
+induction_prob <- 0.006
 symbiosis_prob <- 0.01
-cost_r <- 0.01
-growth_rate <- 1.01
+cost_r <- 0.001
+growth_rate <- 1.5
 mut_rate <- 0.005
+K = 2000
+
+
 
 # create your simulation data
-output <- simulate_pop(N_init_wt, N_init_r, N_init_s, infection_prob, induction_prob, symbiosis_prob, mut_rate, cost_r, growth_rate, max_gen)
+output <- simulate_pop(N_init_wt, N_init_r, N_init_s, infection_prob, induction_prob, symbiosis_prob, mut_rate, cost_r, growth_rate, max_gen, K)
 # show the last few lines of the data table
 print(tail(output))
 # plot the output - note that the plot range and the x axis have to be adjusted based on the length of the table
 # determine x axis range 
 x_range <- 0:(length(output[,1])-1)
-# this plots the total population size
-plot(x_range,output[,1]+output[,2]+output[,3],type='l',ylim=c(0,max(output[,1]+output[,2]+output[,3])),xlab = "Generation",ylab = "Population size")
-# add number of wild type individuals
-lines(x_range,output[,1], col="blue")
-# add number of resistant individuals
-lines(x_range,output[,2], col="red")
-# add number of symbiotic individuals
-lines(x_range,output[,3], col="green")
+
+# plotting with ggplot
+library(ggplot2)
+library(tidyr)
+library(dplyr)
+library(tibble)
+
+# Convert simulation output into a data frame
+output_df <- as.data.frame(output) %>%
+  mutate(Generation = as.numeric(rownames(output))) %>%
+  mutate(Total = wt + r + s)
+
+# Reshape data for ggplot
+plot_data <- output_df %>%
+  pivot_longer(
+    cols = c(Total, wt, r, s),
+    names_to = "Population",
+    values_to = "Size"
+  ) %>%
+  mutate(
+    Population = factor(
+      Population,
+      levels = c("Total", "wt", "r", "s"),
+      labels = c(
+        "Total population",
+        "Wild type",
+        "Resistant",
+        "Symbiotic"
+      )
+    )
+  )
+
+# Plot population trajectories
+ggplot(plot_data, aes(x = Generation, y = Size, colour = Population)) +
+  geom_line(linewidth = 0.4) +
+  scale_colour_manual(
+    values = c(
+      "Total population" = "black",
+      "Wild type" = "blue",
+      "Resistant" = "red",
+      "Symbiotic" = "green"
+    )
+  ) +
+  labs(
+    x = "Generation",
+    y = "Population size",
+    colour = NULL
+  ) +
+  ggtitle( "Evolutionary rescue with resistant and symbiotic bacteria")+
+  theme_classic() +
+  theme(
+    legend.position = "right",
+    legend.justification = "center",
+    legend.background = element_blank()
+  )
+
+
+
 ``` 
 
 ## A small analysis
