@@ -18,21 +18,21 @@ In this notebook, we are implementing simulations of evolutionary rescue by a si
 -Which strategy is the most successful?
 
 ## List of variables and parameters
-- $N_wt$ current size of the wild-type (N_wt) bacteria population (changes over time)
-- $N_r$ current size of the resistant (N_r) bacteria population (changes over time)
-- $N_s$ current size of the symbiotic (N_r) bacteria population (changes over time)
-- ($N_P$ current size of the Phage (P) population (changes over time)) --> maybe add later
+- $N_wt$ current size of the wild-type bacteria population (changes over time)
+- $N_r$ current size of the resistant bacteria population (changes over time)
+- $N_s$ current size of the symbiotic bacteria population (changes over time)
+- ($N_P$ current size of the Phage population (changes over time)) --> maybe add later
 - `N_init_wt` initial population size of wild-type population (should be a positive integer)
 - `N_init_r` initial population size of the mutant resistant population (should be a non-negative integer)
 - `N_init_s` initial population size of the symbiotic population (should be a non-negative integer)
 - (`N_init_P` initial population size of the phage population (should be a positive integer))
-- `growth_rate` average number of offspring per bacterium (wt, r and s) per generation
+- `growth_rate` average number of offspring per bacterium (wt, r and s) per generation (should be a non-negative integer)
 - `symbiosis_prob` probability that wt bacterium becomes symbiotic (range 0-1), should be bigger than mutation rate
-- `mut_rate`probability that an offspring of wt bacterium mutates to resistant
+- `mut_rate` probability that an offspring of wt bacterium mutates to resistant
 - `infection_prob` probability that wt bacterium is infected by a phage per generation (range 0-1) ~  wt death rate
-- `induction_prob` probability (per generation) that a symbiotic bacterium is killed by its own dormant phage (range 0-1) ~ symbiotic death rate
-- `cost_r` fraction of offspring that resistant bacteria lose compared to wt ->fitness cost of resistance (0-1) --> 1 is maximal cost, 0 is no cost
-- `t_max` number of generations after which to stop the simulation (should be an integer >0; this is not a model parameter but a setting for the simulations). In the code presented here, the simulation stops automatically if the population goes extinct, or if it recovers and exceeds 1.5 times the original total population size, so `t_max` can be set to a large value without creating extremely long simulation times.
+- `induction_prob` probability (per generation) that a symbiotic bacterium is killed by its own dormant phage (range 0-1) ~ symbiotic death rate, should be smaller than infection rate
+- `cost_r` fraction of offspring that resistant bacteria lose compared to wt ->fitness cost of resistance (0-1) --> 1 is maximal cost, 0 is no cost. cost should be smaller than induction rate
+- `t_max` number of generations after which to stop the simulation (should be an integer >0; this is not a model parameter but a setting for the simulations). In the code presented here, the simulation stops automatically if the population goes extinct, or if it recovers and exceeds 3 times the original total population size, so `t_max` can be set to a large value without creating extremely long simulation times.
 
 
 ## Simulate one generation of population size change
@@ -161,12 +161,12 @@ max_gen <- 1000
 N_init_wt <- 1000
 N_init_r <- 10
 N_init_s <- 10
-infection_prob <- 0.0045
-induction_prob <- 0.008
-symbiosis_prob <- 0.02
-cost_r <- 0.005
+infection_prob <- 0.02
+induction_prob <- 0.02
+symbiosis_prob <- 0.01
+cost_r <- 0.01
 growth_rate <- 1.01
-mut_rate <- 0.01
+mut_rate <- 0.005
 
 # create your simulation data
 output <- simulate_pop(N_init_wt, N_init_r, N_init_s, infection_prob, induction_prob, symbiosis_prob, mut_rate, cost_r, growth_rate, max_gen)
