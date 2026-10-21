@@ -38,37 +38,62 @@ In this notebook, we are implementing simulations of evolutionary rescue by a si
 ## Simulate one generation of population size change
 We want to observe the numbers of wild-type and mutant individuals over time. As first step, we simulate one generation of the population. At time $t$, the population has $N_B_wt$ wild-type individuals and $N_B_r$ mutant individuals. First, these reproduce. This is modeled by drawing a Poisson random variable according to the expected absolute number $N_B_wt \cdot (1-r)$ of wild-type individuals, where $r$ is the decay rate of the wild type, and $N_B_r \cdot (1-r+s)$ of mutant individuals, where $s$ is the selective advantage of the mutant over the wild time. Then mutation from $a$ to $A$ occurs as a Poisson random variable according to the given mutation rate. This defines the composition of the population at time $t+1$.
 ```{r one generation}
-simulate_one_gen <- function(N_wt, N_r, N_s, infection_prob, induction_prob, symbiosis_prob, mut_rate, cost_r, growth_rate) {
+simulate_one_gen <- function(N_wt, N_r, N_s, infection_prob, induction_prob, symbiosis_prob, mut_rate, cost_r, growth_rate, K) {
+  
+  N_tot <- N_wt + N_r + N_s
+  
+  # intrinsic growth without losses
+  r0 <- growth_rate - 1
+  
+  # growth rate of each type minus its specific loss
+  rho_wt <- r0 - infection_prob
+  rho_r <- r0 - cost_r
+  rho_s <- r0 - induction_prob
+  
+  # logistic growth: crowding reduces all types by the same amount
+  mean_wt <- N_wt * max(0, 1 + rho_wt - r0 * N_tot / K)
+  mean_r <- N_r * max(0, 1 + rho_r - r0 * N_tot / K)
+  mean_s <- N_s * max(0, 1 + rho_s - r0 * N_tot / K)
+  
+  # Claude imput: offspring (Poisson)
+  offsp_wt <- rpois(1, mean_wt)
+  offsp_r  <- rpois(1, mean_r)
+  offsp_s  <- rpois(1, mean_s)
   
   # fraction of symbiotic that die from induction
-  n_inducted <-rpois(1, N_s * induction_prob)
-  
-  # fraction of wt that die from infection
-  n_infected <-rpois(1, N_wt* infection_prob)
-  
-  
-  # all offspring with same growth rate 
-  offsp_wt <- rpois(1, growth_rate * (N_wt - n_infected))
-  offsp_s <- rpois(1, growth_rate * (N_s - n_inducted))
-  offsp_r <- rpois(1, growth_rate * N_r)
-  
-  #fitness cost of resistance
-  offsp_r = (1-cost_r)*offsp_r
+  # n_inducted <-rpois(1, N_s * induction_prob)
+  # 
+  # # fraction of wt that die from infection
+  # n_infected <-rpois(1, N_wt* infection_prob)
+  # 
+  # 
+  # # all offspring with same growth rate 
+  # offsp_wt <- rpois(1, growth_rate * (N_wt - n_infected))
+  # offsp_s <- rpois(1, growth_rate * (N_s - n_inducted))
+  # offsp_r <- rpois(1, growth_rate * N_r)
+  # 
+  # #fitness cost of resistance
+  # offsp_r = (1-cost_r)*offsp_r
   
    # wt bacteria (offspring) either get infected (& die) or do symbiosis or stay
-  prob_wt = 1-mut_rate - symbiosis_prob
-  outcome = rmultinom(1,offsp_wt,c(mut_rate,symbiosis_prob,prob_wt))
   
-  n_resistant = outcome[1]
-  n_symbiotic = outcome[2]
-  n_wt = outcome[3]
+  prob_wt <- 1-mut_rate - symbiosis_prob
+  outcome <- rmultinom(1,offsp_wt,c(mut_rate,symbiosis_prob,prob_wt))
+  
+  n_resistant <- outcome[1]
+  n_symbiotic <- outcome[2]
+  n_wt <- outcome[3]
+  
+  # Claude imput: new population sizes of wild type, resistant and symbiotes
+  N_wt_new <- n_wt
+  N_r_new  <- offsp_r + n_resistant
+  N_s_new  <- offsp_s + n_symbiotic
 
-  
 
   # determine new population sizes of wild type, resistant and symbiotes
-  N_wt_new <- max(n_wt, 0)
-  N_s_new <- max(n_symbiotic + offsp_s, 0)
-  N_r_new <-  max(offsp_r + n_resistant, 0)
+  # N_wt_new <- max(n_wt, 0)
+  # N_s_new <- max(n_symbiotic + offsp_s, 0)
+  # N_r_new <-  max(offsp_r + n_resistant, 0)
   
   return(c(N_wt_new, N_r_new, N_s_new))
 }
