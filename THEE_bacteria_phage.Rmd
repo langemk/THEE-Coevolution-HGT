@@ -52,24 +52,24 @@ simulate_one_gen <- function(N_wt, N_r, N_s, infection_prob, symbiosis_prob, ind
   offsp_s <- rpois(1, growth_rate * (N_s - n_inducted))
   offsp_r <- rpois(1, growth_rate * N_r)
   
-  # draw new mutants according to Poisson distribution
-  mut_wt_to_r <- rpois(1, offsp_wt * mut_rate)
+  #fitness cost of resistance
+  offsp_r = (1-cost_r)*offsp_r
   
-   # wt bacteria either get infected (& die) or do symbiosis or stay
+   # wt bacteria (offspring) either get infected (& die) or do symbiosis or stay
   prob_wt = 1-mut_rate - symbiosis_prob
   outcome = rmultinom(1,offsp_wt,c(mut_rate,symbiosis_prob,prob_wt))
+  
   n_resistant = outcome[1]
   n_symbiotic = outcome[2]
   n_wt = outcome[3]
 
   
 
-  # determine new population sizes of wild type and mutant
-  N_wt_new <- max(n_wt - n_infected, 0)
-  # cost_r affects offsprings (1-cost)
-  N_r_new <-  max(((1 - cost_r) * offsp_r) + mut_wt_to_r, 0)
+  # determine new population sizes of wild type, resistant and symbiotes
+  N_wt_new <- max(n_wt, 0)
   N_s_new <- max(n_symbiotic + offsp_s, 0)
-  ?
+  N_r_new <-  max(offsp_r + n_resistant, 0)
+  
   return(c(N_wt_new, N_r_new, N_s_new))
 }
 
@@ -121,14 +121,14 @@ simulate_pop <- function(N_init_wt, N_init_r, N_init_s, infection_prob, inductio
 max_gen <- 1000
 #numbers for each parameter
 N_init_wt <- 1000
-N_init_r <- 0
-N_init_s <- 0
-infection_prob <- 0.7
-induction_prob <- 0.1
+N_init_r <- 10
+N_init_s <- 10
+infection_prob <- 0.001
+induction_prob <- 0.001
 symbiosis_prob <- 0.05
-cost_r <- 0.1
+cost_r <- 0.001
 growth_rate <- 1
-mut_rate <- 0.001
+mut_rate <- 0.01
 
 # create your simulation data
 output <- simulate_pop(N_init_wt, N_init_r, N_init_s, infection_prob, induction_prob, symbiosis_prob, cost_r, growth_rate, mut_rate, max_gen)
