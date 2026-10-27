@@ -125,7 +125,7 @@ simulate_pop <- function(N_init_wt, N_init_r, N_init_s, N_init_p, infection_prob
     pop_new <- simulate_one_gen(pop_new[1],pop_new[2], pop_new[3], pop_new[4], infection_prob, induction_prob, symbiosis_prob, mut_rate, cost_r, growth_rate, K, P_decline, P_prod)
     # add the new population sizes to the output vector
     pop_vector <- rbind(pop_vector,pop_new)
-    # condition to stop the simulation before t_max: either the population exceeds 1.5 times the original population size, or it goes extinct
+    # condition to stop the simulation before t_max: the bacteria population goes extinct
     if (pop_new[1]+pop_new[2]+pop_new[3]==0) break
   }
   
