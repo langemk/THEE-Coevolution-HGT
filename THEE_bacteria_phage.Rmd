@@ -32,9 +32,9 @@ In this notebook, we are implementing simulations of evolutionary rescue based o
 - `infection_prob` probability that wt bacterium is infected by a phage per generation (range 0-1) ~  wt death rate
 - `induction_prob` probability (per generation) that a symbiotic bacterium is killed by its own dormant phage (range 0-1) ~ symbiotic death rate, should be smaller than infection rate
 - `cost_r` fraction of offspring that resistant bacteria lose compared to wt ->fitness cost of resistance (0-1) --> 1 is maximal cost, 0 is no cost. cost should be smaller than induction rate
-- `K` carrying capacity of the total bacteria population (wt + r + s)
-- `P_decline` fixed decline of phages
-- `P_prod` Number of new phages produced from an infection or induction
+- `K` carrying capacity of the total bacteria population (wt + r + s) (positive integer)
+- `P_decline` fixed decline of phages (non-positive integer)
+- `P_prod` Number of new phages produced from an infection or induction (non-negative integer)
 - `t_max` number of generations after which to stop the simulation (should be an integer >0; this is not a model parameter but a setting for the simulations). In the code presented here, the simulation stops automatically if the population goes extinct, or if it recovers and exceeds 3 times the original total population size, so `t_max` can be set to a large value without creating extremely long simulation times.
 
 
@@ -141,26 +141,26 @@ simulate_pop <- function(N_init_wt, N_init_r, N_init_s, N_init_p, infection_prob
 # set t_max to a value to be used througout
 max_gen <- 1000
 # set each parameter
-N_init_wt <- 1000
+N_init_wt <- 100
 N_init_r <- 0
 N_init_s <- 0
 N_init_p <- 10
-infection_prob <- 0.04
-induction_prob <- 0.01
-symbiosis_prob <- 0.008
-cost_r <- 0.01
+infection_prob <- 0.02
+induction_prob <- 0.007 # change this
+symbiosis_prob <- 0.002 
+cost_r <- 0.00001 # this
 growth_rate <- 1.5
-mut_rate <- 0.01
-K <- 1000
+mut_rate <- 0.003 
+K <- 2000
 P_decline <- -0.5
-P_prod <- 5
-
-
+P_prod <- 2
 
 # create your simulation data
 output <- simulate_pop(N_init_wt, N_init_r, N_init_s, N_init_p, infection_prob, induction_prob, symbiosis_prob, mut_rate, cost_r, growth_rate, max_gen, K, P_decline, P_prod)
 # show the last few lines of the data table
 print(tail(output))
+
+
 # plot the output - note that the plot range and the x axis have to be adjusted based on the length of the table
 # determine x axis range 
 x_range <- 0:(length(output[,1])-1)
@@ -264,24 +264,33 @@ As you can see if you simulate and plot the output several times, there is a lot
 
 ```{r}
 # set some parameters to fixed values
-init_a <- 100
-init_A <- 0
-m_rate <- 0.001
 max_gen <- 1000
+N_init_wt <- 100
+N_init_r <- 0
+N_init_s <- 0
+N_init_p <- 10
+infection_prob <- 0.02
+symbiosis_prob <- 0.004 
+growth_rate <- 1.5
+mut_rate <- 0.003 
+K <- 1000
+P_decline <- -0.5
+P_prod <- 3
+
 # determine how often to run the simulation for each set of parameters
 no_replicates <- 100
 
 # set parameters to vary
-s_values <- c(0.2,0.3,0.4)
-r_values <- c(0.05,0.1,0.15)
+induction_prob = c(0.004, 0.007, 0.01) #steps of 0.003
+cost_r = c(0.000005, 0.00001, 0.000015) #steps of 0.000005
 
 # initialize data table - where to collect the results
 data_table <- c()
 # run the simulation across all chosen parameters
 # loop over decay rates
-for(rval in r_values){
+for(ival in induction_prob){
   # loop over selection coefficients
-  for(sval in s_values){
+  for(cval in cost_r){
     # different way of running many simulations: make replicates using "repeat" function with a counter i
     # reset counter
     i<-1
@@ -289,9 +298,12 @@ for(rval in r_values){
       # increase counter by one
       i<-i+1
       # run the simulation once
-      one_run <- simulate_pop(init_a,init_A,rval,sval,m_rate,max_gen)
+      one_run <- simulate_pop(N_init_wt, N_init_r, N_init_s, N_init_p, infection_prob, induction_prob, symbiosis_prob, mut_rate, cost_r, growth_rate, max_gen, K, P_decline, P_prod)
       # determine total population sizes
-      total_size <- one_run[,1]+one_run[,2]
+      #  total_size <- one_run[,1]+one_run[,2]+one_run[,3]
+      
+      
+      
       # determine minimum population size
       min_size <- min(total_size)
       # determine (first) generation at which this population size occurred
@@ -308,4 +320,108 @@ colnames(data_table) <- c("r","s","min_gen","no_min")
 # show the first lines of the output
 print(head(data_table))
 ``` 
+
+```{r cost_r iterations}
+# set some parameters to fixed values
+max_gen <- 1000
+N_init_wt <- 100
+N_init_r <- 0
+N_init_s <- 0
+N_init_p <- 10
+infection_prob <- 0.02
+symbiosis_prob <- 0.002 
+growth_rate <- 1.5
+mut_rate <- 0.003 
+K <- 2000
+P_decline <- -0.5
+P_prod <- 3
+
+# determine how often to run the simulation for each set of parameters
+no_replicates <- 100
+
+# set parameters to vary
+induction_prob = 0.007 #steps of 0.003
+cost_r = c(0.000005, 0.00001, 0.000015) #steps of 0.000005 --> change this to steps of 0.000001
+
+# initialize data table - where to collect the results
+ data_table <- c()
+
+
+# run the simulation across  chosen parameter: cost_r
+  # loop over selection coefficients
+  for(cval in cost_r){
+    # different way of running many simulations: make replicates using "repeat" function with a counter i
+    # reset counter
+    i<-1
+    repeat {
+      # increase counter by one
+      i<-i+1
+      # run the simulation once with changing parameter
+      one_run <- simulate_pop(N_init_wt, N_init_r, N_init_s, N_init_p, infection_prob, induction_prob, symbiosis_prob, mut_rate, cval, growth_rate, max_gen, K, P_decline, P_prod)
+      
+      # Record population sizes at the final simulated generation
+      final_sizes <- as.numeric(tail(one_run, 1))
+      
+      # add current result of current iteration to datatable
+      data_table <- rbind(data_table,c(cval,final_sizes[1],final_sizes[2],final_sizes[3],final_sizes[4] )) # note that we add the varying parameters to the table too
+
+     # note that we add the varying parameters to the table too
+      # stop the repeated computation after no_replicates times
+      if(i>no_replicates) break
+    }
+}
+# define column names of data table
+colnames(data_table) <- c("cost_r", "wt", "r", "s", "p")
+# show the first lines of the output
+print(head(data_table))
+
+
+## determine outcomes
+# convert to dataframe
+outcomes = as.data.frame(data_table)
+outcomes$outcome <- NA_character_
+
+for (i in seq_len(nrow(outcomes))) {
+  wt <- outcomes[i, "wt"]
+  r  <- outcomes[i, "r"]
+  s  <- outcomes[i, "s"]
+
+  if (wt == 0 & r == 0 & s == 0) {
+    outcomes$outcome[i] <- "extinction"
+  } else if (wt > 0 & r == 0 & s == 0) {
+    outcomes$outcome[i] <- "wt wins"
+  } else if (r > 0 & wt == 0 & s == 0) {
+    outcomes$outcome[i] <- "r wins"
+  } else if (s > 0 & wt == 0 & r == 0) {
+    outcomes$outcome[i] <- "s wins"
+  } else {
+    outcomes$outcome[i] <- "coexistence"
+  }
+}
+
+print(head(outcomes))
+
+
+## plot outcomes
+
+# treat cost_r as a categorical axis (only three values)
+outcomes$cost_r <- factor(outcomes$cost_r)
+
+# fix the order of the five outcomes so colours are consistent
+outcomes$outcome <- factor(outcomes$outcome,
+  levels = c("extinction", "wt wins", "r wins", "s wins", "coexistence"))
+
+ggplot(outcomes, aes(x = cost_r, fill = outcome)) +
+  geom_bar(position = "fill") +
+  scale_y_continuous(labels = scales::percent) +
+  scale_fill_manual(values = c("extinction"  = "grey50",
+                               "wt wins"     = "#E69F00",
+                               "r wins"      = "#0072B2",
+                               "s wins"      = "#009E73",
+                               "coexistence" = "#CC79A7"),
+                    drop = FALSE) +
+  labs(x = "Cost of resistance (cost_r)", y = "Proportion of replicates", fill = "Outcome") +
+  theme_minimal()
+ 
+```
 
