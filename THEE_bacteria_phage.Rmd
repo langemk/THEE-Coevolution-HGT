@@ -139,22 +139,24 @@ simulate_pop <- function(N_init_wt, N_init_r, N_init_s, N_init_p, infection_prob
 
 # Test the function and plot the result
 # set t_max to a value to be used througout
-max_gen <- 1000
-# set each parameter
+max_gen <- 3000
+
 N_init_wt <- 100
 N_init_r <- 0
 N_init_s <- 0
 N_init_p <- 10
 infection_prob <- 0.02
-induction_prob <- 0.007 # change this
 symbiosis_prob <- 0.002 
-cost_r <- 0.00001 # this
 growth_rate <- 1.5
 mut_rate <- 0.003 
 K <- 2000
 P_decline <- -0.5
-P_prod <- 2
+P_prod <- 3
+# set parameters to vary
+induction_prob = 0.007 #steps of 0.003
+cost_r = 0.0000005
 
+set.seed(54)
 # create your simulation data
 output <- simulate_pop(N_init_wt, N_init_r, N_init_s, N_init_p, infection_prob, induction_prob, symbiosis_prob, mut_rate, cost_r, growth_rate, max_gen, K, P_decline, P_prod)
 # show the last few lines of the data table
@@ -323,7 +325,7 @@ print(head(data_table))
 
 ```{r cost_r iterations}
 # set some parameters to fixed values
-max_gen <- 1000
+max_gen <- 2500
 N_init_wt <- 100
 N_init_r <- 0
 N_init_s <- 0
@@ -341,11 +343,13 @@ no_replicates <- 100
 
 # set parameters to vary
 induction_prob = 0.007 #steps of 0.003
-cost_r = c(0.000005, 0.00001, 0.000015) #steps of 0.000005 --> change this to steps of 0.000001
+cost_r = c(0.0000005, 0.000001, 0.0000015) #steps of 0.0000005 --> change this to steps of 0.000001
 
 # initialize data table - where to collect the results
  data_table <- c()
 
+ # set seed for reproducibility
+ # set.seed(10)
 
 # run the simulation across  chosen parameter: cost_r
   # loop over selection coefficients
@@ -356,6 +360,8 @@ cost_r = c(0.000005, 0.00001, 0.000015) #steps of 0.000005 --> change this to st
     repeat {
       # increase counter by one
       i<-i+1
+      set.seed(i)
+      seed = i
       # run the simulation once with changing parameter
       one_run <- simulate_pop(N_init_wt, N_init_r, N_init_s, N_init_p, infection_prob, induction_prob, symbiosis_prob, mut_rate, cval, growth_rate, max_gen, K, P_decline, P_prod)
       
@@ -363,7 +369,7 @@ cost_r = c(0.000005, 0.00001, 0.000015) #steps of 0.000005 --> change this to st
       final_sizes <- as.numeric(tail(one_run, 1))
       
       # add current result of current iteration to datatable
-      data_table <- rbind(data_table,c(cval,final_sizes[1],final_sizes[2],final_sizes[3],final_sizes[4] )) # note that we add the varying parameters to the table too
+      data_table <- rbind(data_table,c(cval,final_sizes[1],final_sizes[2],final_sizes[3],final_sizes[4], seed )) # note that we add the varying parameters to the table too
 
      # note that we add the varying parameters to the table too
       # stop the repeated computation after no_replicates times
@@ -371,7 +377,7 @@ cost_r = c(0.000005, 0.00001, 0.000015) #steps of 0.000005 --> change this to st
     }
 }
 # define column names of data table
-colnames(data_table) <- c("cost_r", "wt", "r", "s", "p")
+colnames(data_table) <- c("cost_r", "wt", "r", "s", "p", "seed")
 # show the first lines of the output
 print(head(data_table))
 
@@ -385,6 +391,7 @@ for (i in seq_len(nrow(outcomes))) {
   wt <- outcomes[i, "wt"]
   r  <- outcomes[i, "r"]
   s  <- outcomes[i, "s"]
+  seed = outcomes [i, "seed"]
 
   if (wt == 0 & r == 0 & s == 0) {
     outcomes$outcome[i] <- "extinction"
@@ -411,6 +418,7 @@ outcomes$cost_r <- factor(outcomes$cost_r)
 outcomes$outcome <- factor(outcomes$outcome,
   levels = c("extinction", "wt wins", "r wins", "s wins", "coexistence"))
 
+# barplot
 ggplot(outcomes, aes(x = cost_r, fill = outcome)) +
   geom_bar(position = "fill") +
   scale_y_continuous(labels = scales::percent) +
@@ -422,6 +430,32 @@ ggplot(outcomes, aes(x = cost_r, fill = outcome)) +
                     drop = FALSE) +
   labs(x = "Cost of resistance (cost_r)", y = "Proportion of replicates", fill = "Outcome") +
   theme_minimal()
- 
+
+# # beeswarm
+# install.packages("ggbeeswarm")
+# library(ggplot2)
+# library(ggbeeswarm)
+# 
+# 
+# library(ggplot2)
+# 
+# 
+# 
+# pal <- c("extinction"  = "grey50",
+#          "wt wins"     = "#E69F00",
+#          "r wins"      = "#0072B2",
+#          "s wins"      = "#009E73",
+#          "coexistence" = "#CC79A7")
+# 
+# counts <- as.data.frame(table(cost_r = outcomes$cost_r, outcome = outcomes$outcome))
+# 
+# ggplot(counts, aes(x = cost_r, y = Freq, colour = outcome)) +
+#   geom_point(position = position_dodge(width = 0.6), size = 4) +
+#   scale_colour_manual(values = pal) +
+#   labs(x = "Cost of resistance (cost_r)",
+#        y = "Number of occurrences",
+#        colour = "Outcome") +
+#   theme_minimal()
+#  
 ```
 
