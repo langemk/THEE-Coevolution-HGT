@@ -139,24 +139,24 @@ simulate_pop <- function(N_init_wt, N_init_r, N_init_s, N_init_p, infection_prob
 
 # Test the function and plot the result
 # set t_max to a value to be used througout
-max_gen <- 3000
+max_gen <- 2000
 
 N_init_wt <- 100
 N_init_r <- 0
 N_init_s <- 0
-N_init_p <- 10
-infection_prob <- 0.02
-symbiosis_prob <- 0.002 
-growth_rate <- 1.5
-mut_rate <- 0.003 
+N_init_p <- 1
+infection_prob <- 0.01
+symbiosis_prob <- 0.002
+growth_rate <- 1.7
+mut_rate <- 0.0005
 K <- 2000
 P_decline <- -0.5
-P_prod <- 3
+P_prod <- 1.5
 # set parameters to vary
-induction_prob = 0.007 #steps of 0.003
-cost_r = 0.0000005
+induction_prob = 0.7 #steps of 0.003
+cost_r = 0.7
 
-set.seed(54)
+set.seed(10)
 # create your simulation data
 output <- simulate_pop(N_init_wt, N_init_r, N_init_s, N_init_p, infection_prob, induction_prob, symbiosis_prob, mut_rate, cost_r, growth_rate, max_gen, K, P_decline, P_prod)
 # show the last few lines of the data table
@@ -325,25 +325,25 @@ print(head(data_table))
 
 ```{r cost_r iterations}
 # set some parameters to fixed values
-max_gen <- 2500
+max_gen <- 3000
 N_init_wt <- 100
 N_init_r <- 0
 N_init_s <- 0
-N_init_p <- 10
-infection_prob <- 0.02
+N_init_p <- 1
+infection_prob <- 0.01
 symbiosis_prob <- 0.002 
-growth_rate <- 1.5
-mut_rate <- 0.003 
+growth_rate <- 1.7
+mut_rate <- 0.0005
 K <- 2000
 P_decline <- -0.5
-P_prod <- 3
+P_prod <- 1.5
 
 # determine how often to run the simulation for each set of parameters
 no_replicates <- 100
 
 # set parameters to vary
-induction_prob = 0.007 #steps of 0.003
-cost_r = c(0.0000005, 0.000001, 0.0000015) #steps of 0.0000005 --> change this to steps of 0.000001
+induction_prob <- 0.07 #steps of 0.01
+cost_r <- c(0.01, 0.03, 0.05, 0.07, 0.09) 
 
 # initialize data table - where to collect the results
  data_table <- c()
@@ -360,7 +360,7 @@ cost_r = c(0.0000005, 0.000001, 0.0000015) #steps of 0.0000005 --> change this t
     repeat {
       # increase counter by one
       i<-i+1
-      set.seed(i)
+      #set.seed(i)
       seed = i
       # run the simulation once with changing parameter
       one_run <- simulate_pop(N_init_wt, N_init_r, N_init_s, N_init_p, infection_prob, induction_prob, symbiosis_prob, mut_rate, cval, growth_rate, max_gen, K, P_decline, P_prod)
@@ -402,7 +402,7 @@ for (i in seq_len(nrow(outcomes))) {
   } else if (s > 0 & wt == 0 & r == 0) {
     outcomes$outcome[i] <- "s wins"
   } else {
-    outcomes$outcome[i] <- "coexistence"
+    outcomes$outcome[i] <- "temporary coexistence"
   }
 }
 
@@ -416,7 +416,7 @@ outcomes$cost_r <- factor(outcomes$cost_r)
 
 # fix the order of the five outcomes so colours are consistent
 outcomes$outcome <- factor(outcomes$outcome,
-  levels = c("extinction", "wt wins", "r wins", "s wins", "coexistence"))
+  levels = c("extinction", "wt wins", "r wins", "s wins", "temporary coexistence"))
 
 # barplot
 ggplot(outcomes, aes(x = cost_r, fill = outcome)) +
@@ -426,7 +426,7 @@ ggplot(outcomes, aes(x = cost_r, fill = outcome)) +
                                "wt wins"     = "#E69F00",
                                "r wins"      = "#0072B2",
                                "s wins"      = "#009E73",
-                               "coexistence" = "#CC79A7"),
+                               "temporary coexistence" = "#CC79A7"),
                     drop = FALSE) +
   labs(x = "Cost of resistance (cost_r)", y = "Proportion of replicates", fill = "Outcome") +
   theme_minimal()
