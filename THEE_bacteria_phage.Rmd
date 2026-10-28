@@ -518,9 +518,189 @@ ggplot(outcomes, aes(x = induction_prob, fill = outcome)) +
                                "s wins"      = "#009E73",
                                "coexistence" = "#CC79A7"),
                     drop = FALSE) +
-  labs(x = "Cost of resistance (cost_r)", y = "Proportion of replicates", fill = "Outcome") +
+  labs(x = "Induction probability (induction_prob)", y = "Proportion of replicates", fill = "Outcome") +
   theme_minimal() +
   ggtitle("Outcome proportion with different induction_prob")
+
+```
+
+
+
+
+
+```{r cost_r and induction_prob}
+# set some parameters to fixed values
+# set t_max to a value to be used throughout
+max_gen <- 2000
+
+N_init_wt <- 100
+N_init_r <- 0
+N_init_s <- 0
+N_init_p <- 1
+infection_prob <- 0.01
+symbiosis_prob <- 0.002
+growth_rate <- 1.7
+mut_rate <- 0.0005 
+K <- 2000
+P_decline <- -0.5
+P_prod <- 1.5
+
+# determine how often to run the simulation for each set of parameters
+no_replicates <- 10
+
+# set parameters to vary
+induction_prob = seq(0.05, 0.95, by = 0.3)
+cost_r = seq(0.05, 0.95, by = 0.3)
+
+# initialize data table - where to collect the results
+ data_table <- c()
+
+ # set seed for reproducibility
+ set.seed(10)
+
+# run the simulation across  both parameters: induction_prob and cost_r
+  # loop over selection coefficients
+  for(ival in induction_prob){
+    for(cval in cost_r){
+    
+    # different way of running many simulations: make replicates using "repeat" function with a counter i
+    # reset counter
+    i<-1
+    repeat {
+      # increase counter by one
+      i<-i+1
+      #set.seed(i) # to be able to go back to that exact simulation
+      seed = i
+      # run the simulation once with changing parameter
+      one_run <- simulate_pop(N_init_wt, N_init_r, N_init_s, N_init_p, infection_prob, ival, symbiosis_prob, mut_rate, cval, growth_rate, max_gen, K, P_decline, P_prod)
+      
+      # Record population sizes at the final simulated generation
+      final_sizes <- as.numeric(tail(one_run, 1))
+      
+      # add current result of current iteration to datatable
+      data_table <- rbind(data_table,c(ival, cval, final_sizes[1],final_sizes[2],final_sizes[3],final_sizes[4], seed )) # note that we add the varying parameters to the table too
+
+     # note that we add the varying parameters to the table too
+      # stop the repeated computation after no_replicates times
+      if(i>no_replicates) break
+    }
+}}
+# define column names of data table
+colnames(data_table) <- c("induction_prob", "cost_r", "wt", "r", "s", "p", "seed")
+# show the first lines of the output
+print(head(data_table))
+
+
+## determine outcomes
+# convert to dataframe
+outcomes = as.data.frame(data_table)
+outcomes$outcome <- NA_character_
+
+for (i in seq_len(nrow(outcomes))) {
+  wt <- outcomes[i, "wt"]
+  r  <- outcomes[i, "r"]
+  s  <- outcomes[i, "s"]
+  seed = outcomes [i, "seed"]
+
+  if (wt == 0 & r == 0 & s == 0) {
+    outcomes$outcome[i] <- "extinction"
+  } else if (wt > 0 & r == 0 & s == 0) {
+    outcomes$outcome[i] <- "wt wins"
+  } else if (r > 0 & wt == 0 & s == 0) {
+    outcomes$outcome[i] <- "r wins"
+  } else if (s > 0 & wt == 0 & r == 0) {
+    outcomes$outcome[i] <- "s wins"
+  } else {
+    outcomes$outcome[i] <- "coexistence"
+  }
+}
+
+print(head(outcomes))
+print(tail(outcomes))
+
+# save preliminary data for plotting (seed =10)
+write.csv(outcomes, "/Users/macbookair/Library/CloudStorage/OneDrive-Personal/THEE prakti/THEE Coevolution/data/trial_outcomes.csv")
+
+
+```
+
+```{r heat maps}
+outcomes = read.csv("/Users/macbookair/Library/CloudStorage/OneDrive-Personal/THEE prakti/THEE Coevolution/data/trial_outcomes.csv")
+
+## plot outcomes
+
+# treat parameters as a categorical axis (only three values)
+outcomes$induction_prob <- factor(outcomes$induction_prob)
+outcomes$cost_r = factor(outcomes$cost_r)
+
+# fix the order of the five outcomes so colours are consistent
+outcomes$outcome <- factor(outcomes$outcome,
+  levels = c("extinction", "wt wins", "r wins", "s wins", "coexistence"))
+
+## heat map for coexistence (Claude)
+
+library(ggplot2)
+library(dplyr)
+
+# extinction probability per parameter combination
+ext <- outcomes %>%
+  group_by(induction_prob, cost_r) %>%
+  summarise(p_ext = mean(outcome == "extinction"),
+            n_runs = n(),
+            .groups = "drop")
+
+ggplot(ext, aes(x = cost_r, y = induction_prob, fill = p_ext)) +
+  geom_tile(colour = "white", linewidth = 0.8) +
+  geom_text(aes(label = sprintf("%.2f", p_ext)), size = 4) +
+  scale_fill_gradient(low = "white", high = "#B22222",
+                      limits = c(0, 1), name = "P(extinction)") +
+  labs(x = "Cost of resistance (cost_r)",
+       y = "Induction probability (induction_prob)") +
+  coord_equal() +
+  theme_minimal() +
+  ggtitle("Probability of extinction")
+
+
+## heat map for symbiosis
+# symbiosis probability per parameter combination
+symb <- outcomes %>%
+  group_by(induction_prob, cost_r) %>%
+  summarise(p_symb = mean(outcome == "s wins"),
+            n_runs = n(),
+            .groups = "drop")
+
+ggplot(symb, aes(x = cost_r, y = induction_prob, fill = p_symb)) +
+  geom_tile(colour = "white", linewidth = 0.8) +
+  geom_text(aes(label = sprintf("%.2f", p_symb)), size = 4) +
+  scale_fill_gradient(low = "white", high = "#009E73",
+                      limits = c(0, 1), name = "P(symbiosis)") +
+  labs(x = "Cost of resistance (cost_r)",
+       y = "Induction probability (induction_prob)") +
+  coord_equal() +
+  theme_minimal() +
+  ggtitle("Probability of symbiosis")
+
+## heat map for resistance
+# resistance probability per parameter combination
+res <- outcomes %>%
+  group_by(induction_prob, cost_r) %>%
+  summarise(p_res = mean(outcome == "r wins"),
+            n_runs = n(),
+            .groups = "drop")
+
+ggplot(res, aes(x = cost_r, y = induction_prob, fill = p_res)) +
+  geom_tile(colour = "white", linewidth = 0.8) +
+  geom_text(aes(label = sprintf("%.2f", p_res)), size = 4) +
+  scale_fill_gradient(low = "white", high = "#0072B2",
+                      limits = c(0, 1), name = "P(resistance)") +
+  labs(x = "Cost of resistance (cost_r)",
+       y = "Induction probability (induction_prob)") +
+  coord_equal() +
+  theme_minimal() +
+  ggtitle("Probability of resistance")
+
+
+
 
 ```
 
