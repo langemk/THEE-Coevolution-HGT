@@ -10,14 +10,32 @@ output:
 
 ## Simulating evolutionary rescue in discrete time
 
-In this notebook, we are implementing simulations of evolutionary rescue based on a model of a single mutation in discrete time, as discussed and analyzed in the work by Orr & Unckless. The model is as follows: a haploid population starts with a given number of wild-type and mutant individuals. Because of a sudden environmental change, the wild type is unfit and declines in the new environment. The mutant is beneficial and can survive and expand in the new environment, but it starts at a low (or zero) frequency in the total population. In order to rescue the population, it has to outcompete the wild type. If the mutant is not present at time 0, it has to appear through mutation and then spread in the population before extinction occurs.
+In this notebook, we are implementing simulations of evolutionary rescue in a bacterial population under phage pressure. The model is based on the single-mutation, discrete-time framework, which we extended by a phage population and a second rescue strategy. The model is as follows: a haploid bacterial population starts with a given number of wild-type (wt) bacteria and together with a population of free phages. Because of the phages, the wild-type is unfit: in each generation wt bacteria are killed by phage infection and the more phages there are, the higher the death rate of wild-type. The following are the two possible survival strategies that the bacteria population have:
+
+1. Resistance (slow but safe): wt offspring have a resistance mutation at a low rate (mut_rate). Resistant bacteria are immune to the phages and are not killed by infection. Resistance is permanent, but it comes with a fitness cost (cost_r) that reduces their offspring number.
+
+2. Symbiosis (fast but risky): wt bacteria can enter a symbiotic relationship with the phage (symbiosis_prob) and this becomes more likely the more phages are present. Symbiotic bacteria carry a dormant phage and therefore don't die from infection. However, they can later be killed when their own phage is induced (induction_prob), which releases new phages into the environment. 
+
+So the following are the four possible outcomes of our model:
+1.Extinction
+2.Only Symbiosis persists
+3.Only Resistance persists
+4.Coexistence occurs
+(5.Only wt persists -> not possible)
+
+
+All bacterial types grow with a shared carrying capacity (K) and the phage population is updated each generation from phage decline (P_decline) and from phage production at infection and induction events (P_prod). Resistant and symbiotic bacteria start at a population number of 0, so they have to arise from wt bacteria through mutations or symbiosis and then spread before the bacterial population goes extinct. Rescue means that the bacterial population recovers and persists, so the central question is which strategy (resistance or symbiosis) rescues the population and under which conditions.
+
 
 ## Idea of model:
--Symbiosis is fast but risky. Every infected wt cell can become a symbiont right away, but they can later be killed by induction.
--Resistance is slow but safe. It needs a rare mutation and has a growth cost, but it is permanent.
--Which strategy is the most successful?
+Symbiosis is fast but risky. Every infected wt cell can become a symbiont right away, but they can later be killed by induction.
+Resistance is slow but safe. It needs a rare mutation and has a growth cost, but it is permanent.
+Which strategy is the most successful?
 
 ## List of variables and parameters
+
+**Parameters:**
+
 - $N_wt$ current size of the wild-type bacteria population (changes over time)
 - $N_r$ current size of the resistant bacteria population (changes over time)
 - $N_s$ current size of the symbiotic bacteria population (changes over time)
@@ -30,16 +48,26 @@ In this notebook, we are implementing simulations of evolutionary rescue based o
 - `symbiosis_prob` probability that wt bacterium becomes symbiotic (range 0-1), should be bigger than mutation rate
 - `mut_rate` probability that an offspring of wt bacterium mutates to resistant
 - `infection_prob` probability that wt bacterium is infected by a phage per generation (range 0-1) ~  wt death rate
-- `induction_prob` probability (per generation) that a symbiotic bacterium is killed by its own dormant phage (range 0-1) ~ symbiotic death rate, should be smaller than infection rate
-- `cost_r` fraction of offspring that resistant bacteria lose compared to wt ->fitness cost of resistance (0-1) --> 1 is maximal cost, 0 is no cost. cost should be smaller than induction rate
 - `K` carrying capacity of the total bacteria population (wt + r + s) (positive integer)
 - `P_decline` fixed decline of phages (non-positive integer)
 - `P_prod` Number of new phages produced from an infection or induction (non-negative integer)
-- `t_max` number of generations after which to stop the simulation (should be an integer >0; this is not a model parameter but a setting for the simulations). In the code presented here, the simulation stops automatically if the population goes extinct, or if it recovers and exceeds 3 times the original total population size, so `t_max` can be set to a large value without creating extremely long simulation times.
+- `t_max` number of generations after which to stop the simulation (should be an integer > 0; this is not a model parameter but a setting for the simulations). In the code presented here, the simulation stops automatically if the population goes extinct, or if it recovers and exceeds 3 times the original total population size, so `t_max` can be set to a large value without creating extremely long simulation times.
 
+**Variables:**
+
+- `induction_prob` probability (per generation) that a symbiotic bacterium is killed by its own dormant phage (range 0-1) ~ symbiotic death rate, should be smaller than infection rate
+- `cost_r` fraction of offspring that resistant bacteria lose compared to wt -> fitness cost of resistance (0-1) -> 1 is maximal cost, 0 is no cost. Cost should be smaller than induction rate
 
 ## Simulate one generation of population size change
-We want to observe the numbers of wild-type, resistant and symbiotic individuals over time. Additionally, we tract the phage population. As first step, we simulate one generation of the population. At time $t$, the population has $N_wt$ wild-type individuals, $N_r$ resistant individuals, $N_s$ symbionts and $N_p$ phages. First, the wt and symbiotic bacteria can die of induction or infection, multiplied by the phage population (since the more phages, the higher the probabilty of infection). From the remainder, the offspring of all three types is drawn from Poisson distribution according to the expected absolute numbers (after introducing a carrying capacity). Second, the fraction of wt bacteria becoming resistant (mutation), symbiotic or remaining wt are drawn from a multinomial function given by the mutation rate and symbiosis probability multiplied by the phage population (since the more phages, the higher the probability that wt can enter symbiosis). This defines the size of the bacteria populations and the size of the phage population at time $t+1$.
+We want to follow the numbers of wild-type, resistant and symbiotic bacteria over time, as well as the phage population. As a first step, we simulate a single generation. At time $t$, the population consists of $N_{wt}$ wild-type bacteria, $N_r$ resistant bacteria, $N_s$ symbionts and $N_p$ phages. One generation consists of three steps:
+
+1. **Expected offspring.** Each bacterial type has its own net growth rate, which is the intrinsic growth rate minus a type-specific loss. For wild-type bacteria the loss is the infection probability multiplied by the number of phages, so the more phages there are, the higher the death rate. For resistant bacteria the loss is the cost of resistance (`cost_r`), and for symbionts it is the induction probability (`induction_prob`). Crowding, set by the carrying capacity $K$, reduces the growth of all three types by the same amount. The number of offspring of each type is then drawn from a Poisson distribution around its expected value.
+
+2. **Mutation and symbiosis.** The wild-type offspring are divided into three groups with a multinomial draw: they become resistant (probability `mut_rate`), become symbiotic (probability `symbiosis_prob` multiplied by $N_p$, since more phages make it more likely that a wild-type bacterium enters symbiosis), or remain wild type (the remaining probability).
+
+3. **Phage dynamics.** The phage population declines by a fixed fraction (`P_decline`) and gains `P_prod` new phages for each infection of a wild-type bacterium and each induction of a symbiont.
+
+The result of these steps gives the sizes of all bacterial populations and of the phage population at time $t+1$.
 ```{r one generation}
 simulate_one_gen <- function(N_wt, N_r, N_s, N_p, infection_prob, induction_prob, symbiosis_prob, mut_rate, cost_r, growth_rate, K, P_decline, P_prod) {
    
@@ -109,7 +137,8 @@ print(simulate_one_gen(N_wt, N_r, N_s, N_p, infection_prob, induction_prob, symb
 ``` 
 
 ## Simulate a population trajectory
-We can now track the dynamics of the population from one generation to another, but this is not enough. We want to follow the population from time 0 until it either is rescued or goes extinct. This is what the following function does.
+We can now track the dynamics of the population from one generation to the next, but this is not enough. We want to follow the bacteria and phages from time 0 until the bacteria population either goes extinct or has been rescued by resistant or symbiotic bacteria. The following function repeats the one generation step up to t_max times and stores the sizes of the wild-type, resistant and symbiotic bacteria and also of the phages in every generation. The simulation stops early if all bacteria (wt,r,s) have died.
+
 ```{r population trajectory}
 simulate_pop <- function(N_init_wt, N_init_r, N_init_s, N_init_p, infection_prob, induction_prob, symbiosis_prob, mut_rate, cost_r, growth_rate, t_max, K, P_decline, P_prod) {
  
@@ -138,7 +167,7 @@ simulate_pop <- function(N_init_wt, N_init_r, N_init_s, N_init_p, infection_prob
 
 
 # Test the function and plot the result
-# set t_max to a value to be used througout
+# set t_max to a value to be used throughout
 
 max_gen <- 3000
 
@@ -265,9 +294,8 @@ As you can see if you simulate and plot the output several times, there is a lot
 - time until the population has recovered in case it becomes rescued, dependent on mutation rate and selection coefficient
 - ...
 
-
-```{r cost_r iterations}
-```
+## Analysis
+We want to know 
 
 
 ```{r cost_r iterations}
@@ -378,12 +406,12 @@ ggplot(outcomes, aes(x = cost_r, fill = outcome)) +
                                "coexistence" = "#CC79A7"),
                     drop = FALSE) +
   labs(x = "Cost of resistance (cost_r)", y = "Proportion of replicates", fill = "Outcome") +
-  theme_minimal()
+  theme_minimal() +
+  ggtitle("Outcome proportions with different cost_r")
 ```
 
 
 ```{r induction_prob iterations}
-```{r cost_r iterations}
 # set some parameters to fixed values
 # set t_max to a value to be used throughout
 max_gen <- 2000
@@ -491,7 +519,8 @@ ggplot(outcomes, aes(x = induction_prob, fill = outcome)) +
                                "coexistence" = "#CC79A7"),
                     drop = FALSE) +
   labs(x = "Cost of resistance (cost_r)", y = "Proportion of replicates", fill = "Outcome") +
-  theme_minimal()
+  theme_minimal() +
+  ggtitle("Outcome proportion with different induction_prob")
 
 ```
 
