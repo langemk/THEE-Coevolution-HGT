@@ -139,7 +139,8 @@ simulate_pop <- function(N_init_wt, N_init_r, N_init_s, N_init_p, infection_prob
 
 # Test the function and plot the result
 # set t_max to a value to be used througout
-max_gen <- 2000
+
+max_gen <- 3000
 
 N_init_wt <- 100
 N_init_r <- 0
@@ -148,13 +149,13 @@ N_init_p <- 1
 infection_prob <- 0.01
 symbiosis_prob <- 0.002
 growth_rate <- 1.7
-mut_rate <- 0.0005
+mut_rate <- 0.0005 
 K <- 2000
 P_decline <- -0.5
 P_prod <- 1.5
 # set parameters to vary
-induction_prob = 0.7 #steps of 0.003
-cost_r = 0.7
+induction_prob = 0.7
+cost_r = 0.2
 
 set.seed(10)
 # create your simulation data
@@ -264,76 +265,24 @@ As you can see if you simulate and plot the output several times, there is a lot
 - time until the population has recovered in case it becomes rescued, dependent on mutation rate and selection coefficient
 - ...
 
-```{r}
-# set some parameters to fixed values
-max_gen <- 1000
-N_init_wt <- 100
-N_init_r <- 0
-N_init_s <- 0
-N_init_p <- 10
-infection_prob <- 0.02
-symbiosis_prob <- 0.004 
-growth_rate <- 1.5
-mut_rate <- 0.003 
-K <- 1000
-P_decline <- -0.5
-P_prod <- 3
 
-# determine how often to run the simulation for each set of parameters
-no_replicates <- 100
+```{r cost_r iterations}
+```
 
-# set parameters to vary
-induction_prob = c(0.004, 0.007, 0.01) #steps of 0.003
-cost_r = c(0.000005, 0.00001, 0.000015) #steps of 0.000005
-
-# initialize data table - where to collect the results
-data_table <- c()
-# run the simulation across all chosen parameters
-# loop over decay rates
-for(ival in induction_prob){
-  # loop over selection coefficients
-  for(cval in cost_r){
-    # different way of running many simulations: make replicates using "repeat" function with a counter i
-    # reset counter
-    i<-1
-    repeat {
-      # increase counter by one
-      i<-i+1
-      # run the simulation once
-      one_run <- simulate_pop(N_init_wt, N_init_r, N_init_s, N_init_p, infection_prob, induction_prob, symbiosis_prob, mut_rate, cost_r, growth_rate, max_gen, K, P_decline, P_prod)
-      # determine total population sizes
-      #  total_size <- one_run[,1]+one_run[,2]+one_run[,3]
-      
-      
-      
-      # determine minimum population size
-      min_size <- min(total_size)
-      # determine (first) generation at which this population size occurred
-      min_gen <- as.numeric(which(total_size==min_size)[1])
-      # enter the data into the table
-      data_table <- rbind(data_table,c(rval,sval,min_gen,min_size)) # note that we add the varying parameters (decay rate and selection coefficient) to the table too
-      # stop the repeated computation after no_replicates times
-      if(i>no_replicates) break
-    }
-  }
-}
-# define column names of data table
-colnames(data_table) <- c("r","s","min_gen","no_min")
-# show the first lines of the output
-print(head(data_table))
-``` 
 
 ```{r cost_r iterations}
 # set some parameters to fixed values
-max_gen <- 3000
+# set t_max to a value to be used throughout
+max_gen <- 2000
+
 N_init_wt <- 100
 N_init_r <- 0
 N_init_s <- 0
 N_init_p <- 1
 infection_prob <- 0.01
-symbiosis_prob <- 0.002 
+symbiosis_prob <- 0.002
 growth_rate <- 1.7
-mut_rate <- 0.0005
+mut_rate <- 0.0005 
 K <- 2000
 P_decline <- -0.5
 P_prod <- 1.5
@@ -342,8 +291,8 @@ P_prod <- 1.5
 no_replicates <- 100
 
 # set parameters to vary
-induction_prob <- 0.07 #steps of 0.01
-cost_r <- c(0.01, 0.03, 0.05, 0.07, 0.09) 
+induction_prob = 0.07
+cost_r = seq(0.05, 0.1, by = 0.01)
 
 # initialize data table - where to collect the results
  data_table <- c()
@@ -402,7 +351,7 @@ for (i in seq_len(nrow(outcomes))) {
   } else if (s > 0 & wt == 0 & r == 0) {
     outcomes$outcome[i] <- "s wins"
   } else {
-    outcomes$outcome[i] <- "temporary coexistence"
+    outcomes$outcome[i] <- "coexistence"
   }
 }
 
@@ -416,7 +365,7 @@ outcomes$cost_r <- factor(outcomes$cost_r)
 
 # fix the order of the five outcomes so colours are consistent
 outcomes$outcome <- factor(outcomes$outcome,
-  levels = c("extinction", "wt wins", "r wins", "s wins", "temporary coexistence"))
+  levels = c("extinction", "wt wins", "r wins", "s wins", "coexistence"))
 
 # barplot
 ggplot(outcomes, aes(x = cost_r, fill = outcome)) +
@@ -426,36 +375,123 @@ ggplot(outcomes, aes(x = cost_r, fill = outcome)) +
                                "wt wins"     = "#E69F00",
                                "r wins"      = "#0072B2",
                                "s wins"      = "#009E73",
-                               "temporary coexistence" = "#CC79A7"),
+                               "coexistence" = "#CC79A7"),
+                    drop = FALSE) +
+  labs(x = "Cost of resistance (cost_r)", y = "Proportion of replicates", fill = "Outcome") +
+  theme_minimal()
+```
+
+
+```{r induction_prob iterations}
+```{r cost_r iterations}
+# set some parameters to fixed values
+# set t_max to a value to be used throughout
+max_gen <- 2000
+
+N_init_wt <- 100
+N_init_r <- 0
+N_init_s <- 0
+N_init_p <- 1
+infection_prob <- 0.01
+symbiosis_prob <- 0.002
+growth_rate <- 1.7
+mut_rate <- 0.0005 
+K <- 2000
+P_decline <- -0.5
+P_prod <- 1.5
+
+# determine how often to run the simulation for each set of parameters
+no_replicates <- 100
+
+# set parameters to vary
+induction_prob = 0.07
+cost_r = 0.07
+
+# initialize data table - where to collect the results
+ data_table <- c()
+
+ # set seed for reproducibility
+ # set.seed(10)
+
+# run the simulation across  chosen parameter: induction_prob
+  # loop over selection coefficients
+  for(ival in induction_prob){
+    # different way of running many simulations: make replicates using "repeat" function with a counter i
+    # reset counter
+    i<-1
+    repeat {
+      # increase counter by one
+      i<-i+1
+      #set.seed(i)
+      seed = i
+      # run the simulation once with changing parameter
+      one_run <- simulate_pop(N_init_wt, N_init_r, N_init_s, N_init_p, infection_prob, ival, symbiosis_prob, mut_rate, cost_r, growth_rate, max_gen, K, P_decline, P_prod)
+      
+      # Record population sizes at the final simulated generation
+      final_sizes <- as.numeric(tail(one_run, 1))
+      
+      # add current result of current iteration to datatable
+      data_table <- rbind(data_table,c(ival,final_sizes[1],final_sizes[2],final_sizes[3],final_sizes[4], seed )) # note that we add the varying parameters to the table too
+
+     # note that we add the varying parameters to the table too
+      # stop the repeated computation after no_replicates times
+      if(i>no_replicates) break
+    }
+}
+# define column names of data table
+colnames(data_table) <- c("induction_prob", "wt", "r", "s", "p", "seed")
+# show the first lines of the output
+print(head(data_table))
+
+
+## determine outcomes
+# convert to dataframe
+outcomes = as.data.frame(data_table)
+outcomes$outcome <- NA_character_
+
+for (i in seq_len(nrow(outcomes))) {
+  wt <- outcomes[i, "wt"]
+  r  <- outcomes[i, "r"]
+  s  <- outcomes[i, "s"]
+  seed = outcomes [i, "seed"]
+
+  if (wt == 0 & r == 0 & s == 0) {
+    outcomes$outcome[i] <- "extinction"
+  } else if (wt > 0 & r == 0 & s == 0) {
+    outcomes$outcome[i] <- "wt wins"
+  } else if (r > 0 & wt == 0 & s == 0) {
+    outcomes$outcome[i] <- "r wins"
+  } else if (s > 0 & wt == 0 & r == 0) {
+    outcomes$outcome[i] <- "s wins"
+  } else {
+    outcomes$outcome[i] <- "coexistence"
+  }
+}
+
+print(head(outcomes))
+
+
+## plot outcomes
+
+# treat cost_r as a categorical axis (only three values)
+outcomes$induction_prob <- factor(outcomes$induction_prob)
+
+# fix the order of the five outcomes so colours are consistent
+outcomes$outcome <- factor(outcomes$outcome,
+  levels = c("extinction", "wt wins", "r wins", "s wins", "coexistence"))
+
+# barplot
+ggplot(outcomes, aes(x = induction_prob, fill = outcome)) +
+  geom_bar(position = "fill") +
+  scale_y_continuous(labels = scales::percent) +
+  scale_fill_manual(values = c("extinction"  = "grey50",
+                               "wt wins"     = "#E69F00",
+                               "r wins"      = "#0072B2",
+                               "s wins"      = "#009E73",
+                               "coexistence" = "#CC79A7"),
                     drop = FALSE) +
   labs(x = "Cost of resistance (cost_r)", y = "Proportion of replicates", fill = "Outcome") +
   theme_minimal()
 
-# # beeswarm
-# install.packages("ggbeeswarm")
-# library(ggplot2)
-# library(ggbeeswarm)
-# 
-# 
-# library(ggplot2)
-# 
-# 
-# 
-# pal <- c("extinction"  = "grey50",
-#          "wt wins"     = "#E69F00",
-#          "r wins"      = "#0072B2",
-#          "s wins"      = "#009E73",
-#          "coexistence" = "#CC79A7")
-# 
-# counts <- as.data.frame(table(cost_r = outcomes$cost_r, outcome = outcomes$outcome))
-# 
-# ggplot(counts, aes(x = cost_r, y = Freq, colour = outcome)) +
-#   geom_point(position = position_dodge(width = 0.6), size = 4) +
-#   scale_colour_manual(values = pal) +
-#   labs(x = "Cost of resistance (cost_r)",
-#        y = "Number of occurrences",
-#        colour = "Outcome") +
-#   theme_minimal()
-#  
 ```
 
