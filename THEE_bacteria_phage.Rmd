@@ -53,6 +53,24 @@ Which strategy is the most successful?
 - `P_prod` Number of new phages produced from an infection or induction (non-negative integer)
 - `t_max` number of generations after which to stop the simulation (should be an integer > 0; this is not a model parameter but a setting for the simulations). In the code presented here, the simulation stops automatically if the population goes extinct, or if it recovers and exceeds 3 times the original total population size, so `t_max` can be set to a large value without creating extremely long simulation times.
 
+Fixed parameters:
+max_gen <- 2000
+N_init_wt <- 100
+N_init_r <- 0
+N_init_l <- 0
+N_init_p <- 1
+infection_prob <- 0.01
+lysogen_prob <- 0.002
+growth_rate <- 1.5
+mut_rate <- 0.002 
+K <- 2000
+P_decline <- -0.5
+P_prod <- 1.5
+
+not fix:
+cost_r: 0.35 
+induction_prob: 0.35
+
 **Variables:**
 
 - `induction_prob` probability (per generation) that a lysogenic bacterium is killed by its own dormant phage (range 0-1) ~ lysogenic death rate, should be smaller than infection rate
@@ -70,7 +88,7 @@ We want to follow the numbers of wild-type, resistant and lysogenic bacteria ove
 The result of these steps gives the sizes of all bacterial populations and of the phage population at time $t+1$.
 
 
-```{r one generation}
+```{r One generation}
 simulate_one_gen <- function(N_wt, N_r, N_l, N_p, infection_prob, induction_prob, lysogen_prob, mut_rate, cost_r, growth_rate, K, P_decline, P_prod) {
    
   N_tot <- N_wt + N_r + N_l
@@ -123,17 +141,15 @@ N_wt <- 1000
 N_r <- 0
 N_l <- 0
 N_p <- 5
-infection_prob <- 0.0005
-induction_prob <- 0.001
-lysogen_prob <-0
-cost_r <- 0.1
+infection_prob <- 0.01
+induction_prob <- 0.55
+lysogen_prob <-0.002
+cost_r <- 0.55
 growth_rate <- 1.5
-mut_rate <- 0.1
+mut_rate <- 0.002
 K <- 2000
 P_decline <- -0.5
-P_prod <- 1
-
-
+P_prod <- 1.5
 
 print(simulate_one_gen(N_wt, N_r, N_l, N_p, infection_prob, induction_prob, lysogen_prob, mut_rate, cost_r, growth_rate, K, P_decline, P_prod))
 ``` 
@@ -141,7 +157,7 @@ print(simulate_one_gen(N_wt, N_r, N_l, N_p, infection_prob, induction_prob, lyso
 ## Simulate a population trajectory
 We can now track the dynamics of the population from one generation to the next, but this is not enough. We want to follow the bacteria and phages from time 0 until the bacteria population either goes extinct or has been rescued by resistant or lysogenic bacteria. The following function repeats the one generation step up to `t_max` times and stores the sizes of the wild-type, resistant and lysogenic bacteria and also of the phages in every generation. The simulation stops early if all bacteria (wt,r,l) have died.
 
-```{r population trajectory}
+```{r Population trajectory}
 simulate_pop <- function(N_init_wt, N_init_r, N_init_l, N_init_p, infection_prob, induction_prob, lysogen_prob, mut_rate, cost_r, growth_rate, t_max, K, P_decline, P_prod) {
  
   
@@ -171,7 +187,7 @@ simulate_pop <- function(N_init_wt, N_init_r, N_init_l, N_init_p, infection_prob
 # Test the function and plot the result
 # set t_max to a value to be used throughout
 
-max_gen <- 3000
+max_gen <- 2000
 
 N_init_wt <- 100
 N_init_r <- 0
@@ -179,14 +195,16 @@ N_init_l <- 0
 N_init_p <- 1
 infection_prob <- 0.01
 lysogen_prob <- 0.002
-growth_rate <- 1.7
-mut_rate <- 0.0005 
+growth_rate <- 1.5
+mut_rate <- 0.002 
 K <- 2000
 P_decline <- -0.5
 P_prod <- 1.5
+
 # set parameters to vary
-induction_prob = 0.7
-cost_r = 0.2
+induction_prob = 0.35
+cost_r = 0.35
+
 
 set.seed(10)
 # create your simulation data
@@ -287,6 +305,363 @@ ggplot(
   )
 
 ``` 
+```{r No survival strategy}
+
+max_gen <- 2000
+N_init_wt <- 100
+N_init_r <- 0
+N_init_l <- 0
+N_init_p <- 1
+infection_prob <- 0.01
+lysogen_prob <- 0
+growth_rate <- 1.5
+mut_rate <- 0
+K <- 2000
+P_decline <- -0.5
+P_prod <- 1.5
+
+# set parameters to vary
+induction_prob = 0.35
+cost_r = 0
+
+
+set.seed(10)
+# create your simulation data
+output <- simulate_pop(N_init_wt, N_init_r, N_init_l, N_init_p, infection_prob, induction_prob, lysogen_prob, mut_rate, cost_r, growth_rate, max_gen, K, P_decline, P_prod)
+# show the last few lines of the data table
+print(tail(output))
+
+
+# plot the output - note that the plot range and the x axis have to be adjusted based on the length of the table
+# determine x axis range 
+x_range <- 0:(length(output[,1])-1)
+
+# plotting with ggplot
+library(ggplot2)
+library(tidyr)
+library(dplyr)
+library(tibble)
+
+# Convert simulation output into a data frame
+output_df <- as.data.frame(output) %>%
+  mutate(Generation = as.numeric(rownames(output))) %>%
+  mutate(Total = wt + r + l) 
+
+# Reshape data for ggplot
+plot_data <- output_df %>%
+  pivot_longer(
+    cols = c(Total, wt, r, l, p),
+    names_to = "Population",
+    values_to = "Size"
+  ) %>%
+  mutate(
+    Population = factor(
+      Population,
+      levels = c("Total", "wt", "r", "l", "p"),
+      labels = c(
+        "Total population",
+        "Wild type",
+        "Resistant",
+        "lysogenic",
+        "Phages"
+      )
+    )
+  )
+
+
+# Plot population trajectories
+ggplot(
+  plot_data,
+  aes(
+    x = Generation,
+    y = Size,
+    colour = Population,
+    linetype = Population,
+    alpha = Population
+  )
+) +
+  geom_line(linewidth = 0.4) +
+  scale_colour_manual(
+    values = c(
+      "Total population" = "black",
+      "Wild type" = "blue",
+      "Resistant" = "red",
+      "lysogenic" = "green",
+      "Phages" = "orange"
+    )
+  ) +
+  scale_linetype_manual(
+    values = c(
+      "Total population" = "dotted",
+      "Wild type" = "solid",
+      "Resistant" = "solid",
+      "lysogenic" = "solid",
+      "Phages" = "solid"
+    )
+  ) +
+  scale_alpha_manual(
+    values = c(
+      "Total population" = 0.7,
+      "Wild type" = 1,
+      "Resistant" = 1,
+      "lysogenic" = 1,
+      "Phages" = 1
+    )
+  ) +
+  labs(
+    x = "Generation",
+    y = "Population size",
+    colour = NULL,
+    linetype = NULL,
+    alpha = NULL
+  ) +
+  ggtitle("Evolutionary rescue with resistant and lysogenic bacteria") +
+  theme_classic() +
+  theme(
+    legend.position = "right",
+    legend.justification = "center",
+    legend.background = element_blank()
+  )
+
+``` 
+```{r No resistance}
+
+max_gen <- 2000
+N_init_wt <- 100
+N_init_r <- 0
+N_init_l <- 0
+N_init_p <- 1
+infection_prob <- 0.01
+lysogen_prob <- 0.002
+growth_rate <- 1.5
+mut_rate <- 0
+K <- 2000
+P_decline <- -0.5
+P_prod <- 1.5
+
+# set parameters to vary
+induction_prob = 0.35
+cost_r = 0
+
+
+set.seed(10)
+# create your simulation data
+output <- simulate_pop(N_init_wt, N_init_r, N_init_l, N_init_p, infection_prob, induction_prob, lysogen_prob, mut_rate, cost_r, growth_rate, max_gen, K, P_decline, P_prod)
+# show the last few lines of the data table
+print(tail(output))
+
+
+# plot the output - note that the plot range and the x axis have to be adjusted based on the length of the table
+# determine x axis range 
+x_range <- 0:(length(output[,1])-1)
+
+# plotting with ggplot
+library(ggplot2)
+library(tidyr)
+library(dplyr)
+library(tibble)
+
+# Convert simulation output into a data frame
+output_df <- as.data.frame(output) %>%
+  mutate(Generation = as.numeric(rownames(output))) %>%
+  mutate(Total = wt + r + l) 
+
+# Reshape data for ggplot
+plot_data <- output_df %>%
+  pivot_longer(
+    cols = c(Total, wt, r, l, p),
+    names_to = "Population",
+    values_to = "Size"
+  ) %>%
+  mutate(
+    Population = factor(
+      Population,
+      levels = c("Total", "wt", "r", "l", "p"),
+      labels = c(
+        "Total population",
+        "Wild type",
+        "Resistant",
+        "lysogenic",
+        "Phages"
+      )
+    )
+  )
+
+
+# Plot population trajectories
+ggplot(
+  plot_data,
+  aes(
+    x = Generation,
+    y = Size,
+    colour = Population,
+    linetype = Population,
+    alpha = Population
+  )
+) +
+  geom_line(linewidth = 0.4) +
+  scale_colour_manual(
+    values = c(
+      "Total population" = "black",
+      "Wild type" = "blue",
+      "Resistant" = "red",
+      "lysogenic" = "green",
+      "Phages" = "orange"
+    )
+  ) +
+  scale_linetype_manual(
+    values = c(
+      "Total population" = "dotted",
+      "Wild type" = "solid",
+      "Resistant" = "solid",
+      "lysogenic" = "solid",
+      "Phages" = "solid"
+    )
+  ) +
+  scale_alpha_manual(
+    values = c(
+      "Total population" = 0.7,
+      "Wild type" = 1,
+      "Resistant" = 1,
+      "lysogenic" = 1,
+      "Phages" = 1
+    )
+  ) +
+  labs(
+    x = "Generation",
+    y = "Population size",
+    colour = NULL,
+    linetype = NULL,
+    alpha = NULL
+  ) +
+  ggtitle("Evolutionary rescue with resistant and lysogenic bacteria") +
+  theme_classic() +
+  theme(
+    legend.position = "right",
+    legend.justification = "center",
+    legend.background = element_blank()
+  )
+```
+```{r No lysogeny}
+
+max_gen <- 2000
+
+N_init_wt <- 100
+N_init_r <- 0
+N_init_l <- 0
+N_init_p <- 1
+infection_prob <- 0.01
+lysogen_prob <- 0
+growth_rate <- 1.5
+mut_rate <- 0.002 
+K <- 2000
+P_decline <- -0.5
+P_prod <- 1.5
+
+# set parameters to vary
+induction_prob = 0.35
+cost_r = 0.35
+
+set.seed(10)
+# create your simulation data
+output <- simulate_pop(N_init_wt, N_init_r, N_init_l, N_init_p, infection_prob, induction_prob, lysogen_prob, mut_rate, cost_r, growth_rate, max_gen, K, P_decline, P_prod)
+# show the last few lines of the data table
+print(tail(output))
+
+
+# plot the output - note that the plot range and the x axis have to be adjusted based on the length of the table
+# determine x axis range 
+x_range <- 0:(length(output[,1])-1)
+
+# plotting with ggplot
+library(ggplot2)
+library(tidyr)
+library(dplyr)
+library(tibble)
+
+# Convert simulation output into a data frame
+output_df <- as.data.frame(output) %>%
+  mutate(Generation = as.numeric(rownames(output))) %>%
+  mutate(Total = wt + r + l) 
+
+# Reshape data for ggplot
+plot_data <- output_df %>%
+  pivot_longer(
+    cols = c(Total, wt, r, l, p),
+    names_to = "Population",
+    values_to = "Size"
+  ) %>%
+  mutate(
+    Population = factor(
+      Population,
+      levels = c("Total", "wt", "r", "l", "p"),
+      labels = c(
+        "Total population",
+        "Wild type",
+        "Resistant",
+        "lysogenic",
+        "Phages"
+      )
+    )
+  )
+
+
+# Plot population trajectories
+ggplot(
+  plot_data,
+  aes(
+    x = Generation,
+    y = Size,
+    colour = Population,
+    linetype = Population,
+    alpha = Population
+  )
+) +
+  geom_line(linewidth = 0.4) +
+  scale_colour_manual(
+    values = c(
+      "Total population" = "black",
+      "Wild type" = "blue",
+      "Resistant" = "red",
+      "lysogenic" = "green",
+      "Phages" = "orange"
+    )
+  ) +
+  scale_linetype_manual(
+    values = c(
+      "Total population" = "dotted",
+      "Wild type" = "solid",
+      "Resistant" = "solid",
+      "lysogenic" = "solid",
+      "Phages" = "solid"
+    )
+  ) +
+  scale_alpha_manual(
+    values = c(
+      "Total population" = 0.7,
+      "Wild type" = 1,
+      "Resistant" = 1,
+      "lysogenic" = 1,
+      "Phages" = 1
+    )
+  ) +
+  labs(
+    x = "Generation",
+    y = "Population size",
+    colour = NULL,
+    linetype = NULL,
+    alpha = NULL
+  ) +
+  ggtitle("Evolutionary rescue with resistant and lysogenic bacteria") +
+  theme_classic() +
+  theme(
+    legend.position = "right",
+    legend.justification = "center",
+    legend.background = element_blank()
+  )
+
+```
+
 
 ## A small analysis
 As you can see if you simulate and plot the output several times, there is a lot of stochasticity/variation in the outcome. Therefore, to get interpretable results, we have to run the simulation many times and summarize the outcome depending on the question of our study. Here I am showing an example in which we record the time and the value of the lowest population size (or the time of extinction, if the population size eventually goes to 0). Usually, we want to study this for a range of model parameters; here I am varying the decay rate and the selection coefficient. Other (maybe more interesting) features to study would be the following:
@@ -316,8 +691,8 @@ N_init_l <- 0
 N_init_p <- 1
 infection_prob <- 0.01
 lysogen_prob <- 0.002
-growth_rate <- 1.7
-mut_rate <- 0.0005 
+growth_rate <- 1.5
+mut_rate <- 0.002
 K <- 2000
 P_decline <- -0.5
 P_prod <- 1.5
