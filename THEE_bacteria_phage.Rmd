@@ -704,7 +704,7 @@ cost_r = seq(0.05, 0.1, by = 0.01)
  data_table <- c()
 
  # set seed for reproducibility
- # set.seed(10)
+ set.seed(10)
 
 # run the simulation across  chosen parameter: cost_r
   # loop over selection coefficients
@@ -726,7 +726,6 @@ cost_r = seq(0.05, 0.1, by = 0.01)
       # add current result of current iteration to datatable
       data_table <- rbind(data_table,c(cval,final_sizes[1],final_sizes[2],final_sizes[3],final_sizes[4], seed )) # note that we add the varying parameters to the table too
 
-     # note that we add the varying parameters to the table too
       # stop the repeated computation after no_replicates times
       if(i>no_replicates) break
     }
@@ -817,7 +816,7 @@ cost_r = 0.07
  data_table <- c()
 
  # set seed for reproducibility
- # set.seed(10)
+  set.seed(10)
 
 # run the simulation across  chosen parameter: induction_prob
   # loop over selection coefficients
@@ -839,7 +838,6 @@ cost_r = 0.07
       # add current result of current iteration to datatable
       data_table <- rbind(data_table,c(ival,final_sizes[1],final_sizes[2],final_sizes[3],final_sizes[4], seed )) # note that we add the varying parameters to the table too
 
-     # note that we add the varying parameters to the table too
       # stop the repeated computation after no_replicates times
       if(i>no_replicates) break
     }
@@ -958,7 +956,6 @@ cost_r = seq(0.05, 0.95, by = 0.3)
       # add current result of current iteration to datatable
       data_table <- rbind(data_table,c(ival, cval, final_sizes[1],final_sizes[2],final_sizes[3],final_sizes[4], seed )) # note that we add the varying parameters to the table too
 
-     # note that we add the varying parameters to the table too
       # stop the repeated computation after no_replicates times
       if(i>no_replicates) break
     }
@@ -1005,6 +1002,9 @@ print(tail(outcomes))
 ```{r heat maps}
 # outcomes = read.csv("/Users/aylin/Documents/GitHub/THEE-Coevolution-HGT/data/trial_outcomes.csv")
 
+library(ggplot2)
+library(dplyr)
+
 ## plot outcomes
 
 # treat parameters as a categorical axis (only three values)
@@ -1016,9 +1016,6 @@ outcomes$outcome <- factor(outcomes$outcome,
   levels = c("extinction", "wt wins", "r wins", "l wins", "temporary coexistence"))
 
 ## heat map for extinction (Claude)
-
-library(ggplot2)
-library(dplyr)
 
 # extinction probability per parameter combination
 ext <- outcomes %>%
@@ -1040,6 +1037,7 @@ ggplot(ext, aes(x = cost_r, y = induction_prob, fill = p_ext)) +
 
 
 ## heat map for survival/rescue of total population
+# survival probability per parameter combination
 surv = outcomes %>%
   group_by(induction_prob, cost_r) %>%
   summarise(p_surv = mean(outcome != "extinction"),
@@ -1104,6 +1102,7 @@ ggplot(res, aes(x = cost_r, y = induction_prob, fill = p_res)) +
 
 ## Limitations/Thoughts
 - start with 1 phage. not so realistic, also if want to test effect of phage therapy varying this could be a thing
+- also phage production is very low
 
 ## AI use
 AI was used on the R code for
