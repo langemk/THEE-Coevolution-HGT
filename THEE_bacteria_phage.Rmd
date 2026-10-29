@@ -1,6 +1,6 @@
 ---
 
-title: "Bacteria Evolutionary Rescue: Resistance or Endosymbiosis"
+title: "Bacteria Evolutionary Rescue: Resistance or Lysogen"
 author: "Aylin & Marika"
 date: "2026-10-15"
 output:
@@ -10,25 +10,25 @@ output:
 
 ## Simulating evolutionary rescue in discrete time
 
-In this notebook, we are implementing simulations of evolutionary rescue in a bacterial population under phage pressure. The model is based on the single-mutation, discrete-time framework, which we extended by a phage population and a second rescue strategy. The model is as follows: a haploid bacterial population starts with a given number of wild-type (wt) bacteria and together with a population of free phages. Because of the phages, the wild-type is unfit: in each generation wt bacteria are killed by phage infection and the more phages there are, the higher the death rate of wild-type. The following are the two possible survival strategies that the bacteria population have:
+In this notebook, we are implementing simulations of evolutionary rescue in a bacterial population under phage pressure. The model is based on a single-mutation, discrete-time framework, which we extended by a phage population and a second rescue strategy. The model is as follows: a haploid bacterial population starts with a given number of wild-type (wt) bacteria and together with a population of free phages. Because of the phages, the wild-type is unfit: in each generation wt bacteria are killed by phage infection and the more phages there are, the higher the death rate of the wild-type. The following are the two possible survival strategies that the bacteria population have:
 
-1. Resistance (slow but safe): wt offspring have a resistance mutation at a low rate (mut_rate). Resistant bacteria are immune to the phages and are not killed by infection. Resistance is permanent, but it comes with a fitness cost (cost_r) that reduces their offspring number.
+1. Resistance (slow but safe): wt offspring have a resistance mutation at a low rate (mut_rate). Resistant bacteria are immune to the phages and are not killed by infection. Resistance is permanent, but it comes with a fitness cost (cost_r) that reduces their offspring number. This strategy is phage-independent. 
 
-2. Symbiosis (fast but risky): wt bacteria can enter a symbiotic relationship with the phage (symbiosis_prob) and this becomes more likely the more phages are present. Symbiotic bacteria carry a dormant phage and therefore don't die from infection. However, they can later be killed when their own phage is induced (induction_prob), which releases new phages into the environment. 
+2. Lysogen (fast but risky): wt bacteria can enter a lysogen relationship with the phage (lysogen_prob) and this becomes more likely the more phages are present. Lysogenic bacteria carry a dormant phage and therefore don't die from infection. However, they can later be killed when their own phage is induced (induction_prob), which releases new phages into the environment. This strategy is phage-dependent
 
 So the following are the four possible outcomes of our model:
 1.Extinction
-2.Only Symbiosis persists
-3.Only Resistance persists
-4.Coexistence occurs
+2.Only lysogen persists
+3.Only resistance persists
+(4.Coexistence occurs --> not possible in our model)
 (5.Only wt persists -> not possible)
 
 
-All bacterial types grow with a shared carrying capacity (K) and the phage population is updated each generation from phage decline (P_decline) and from phage production at infection and induction events (P_prod). Resistant and symbiotic bacteria start at a population number of 0, so they have to arise from wt bacteria through mutations or symbiosis and then spread before the bacterial population goes extinct. Rescue means that the bacterial population recovers and persists, so the central question is which strategy (resistance or symbiosis) rescues the population and under which conditions.
+All bacterial types grow with a shared carrying capacity (K) and the phage population is updated each generation from phage decline (P_decline) and from phage production at infection and induction events (P_prod). Resistant and lysogenic bacteria start at a population number of 0, so they have to arise from wt bacteria through mutations or integration (becoming a lysogen) and then spread before the bacterial population goes extinct. Rescue means that the bacterial population recovers and persists, so the central question is which strategy (resistance or lysogen) rescues the population and under which conditions.
 
 
 ## Idea of model:
-Symbiosis is fast but risky. Every infected wt cell can become a symbiont right away, but they can later be killed by induction.
+The lysogen strategy is fast but risky. Every wt cell can become a lysogen right away, but they can later be killed by induction.
 Resistance is slow but safe. It needs a rare mutation and has a growth cost, but it is permanent.
 Which strategy is the most successful?
 
@@ -38,40 +38,42 @@ Which strategy is the most successful?
 
 - $N_wt$ current size of the wild-type bacteria population (changes over time)
 - $N_r$ current size of the resistant bacteria population (changes over time)
-- $N_s$ current size of the symbiotic bacteria population (changes over time)
+- $N_l$ current size of the lysogenic bacteria population (changes over time)
 - $N_P$ current size of the Phage population (changes over time)
 - `N_init_wt` initial population size of wild-type population (should be a positive integer)
 - `N_init_r` initial population size of the mutant resistant population (should be a non-negative integer)
-- `N_init_s` initial population size of the symbiotic population (should be a non-negative integer)
+- `N_init_l` initial population size of the lysogenic population (should be a non-negative integer)
 - `N_init_P` initial population size of the phage population (should be a positive integer)
-- `growth_rate` average number of offspring per bacterium (wt, r and s) per generation (should be a non-negative integer)
-- `symbiosis_prob` probability that wt bacterium becomes symbiotic (range 0-1), should be bigger than mutation rate
+- `growth_rate` average number of offspring per bacterium (wt, r and l) per generation (should be a non-negative integer)
+- `lysogen_prob` probability that wt bacterium becomes lysogenic (range 0-1), should be bigger than mutation rate
 - `mut_rate` probability that an offspring of wt bacterium mutates to resistant
 - `infection_prob` probability that wt bacterium is infected by a phage per generation (range 0-1) ~  wt death rate
-- `K` carrying capacity of the total bacteria population (wt + r + s) (positive integer)
+- `K` carrying capacity of the total bacteria population (wt + r + l) (positive integer)
 - `P_decline` fixed decline of phages (non-positive integer)
 - `P_prod` Number of new phages produced from an infection or induction (non-negative integer)
 - `t_max` number of generations after which to stop the simulation (should be an integer > 0; this is not a model parameter but a setting for the simulations). In the code presented here, the simulation stops automatically if the population goes extinct, or if it recovers and exceeds 3 times the original total population size, so `t_max` can be set to a large value without creating extremely long simulation times.
 
 **Variables:**
 
-- `induction_prob` probability (per generation) that a symbiotic bacterium is killed by its own dormant phage (range 0-1) ~ symbiotic death rate, should be smaller than infection rate
+- `induction_prob` probability (per generation) that a lysogenic bacterium is killed by its own dormant phage (range 0-1) ~ lysogenic death rate, should be smaller than infection rate
 - `cost_r` fraction of offspring that resistant bacteria lose compared to wt -> fitness cost of resistance (0-1) -> 1 is maximal cost, 0 is no cost. Cost should be smaller than induction rate
 
 ## Simulate one generation of population size change
-We want to follow the numbers of wild-type, resistant and symbiotic bacteria over time, as well as the phage population. As a first step, we simulate a single generation. At time $t$, the population consists of $N_{wt}$ wild-type bacteria, $N_r$ resistant bacteria, $N_s$ symbionts and $N_p$ phages. One generation consists of three steps:
+We want to follow the numbers of wild-type, resistant and lysogenic bacteria over time, as well as the phage population. As a first step, we simulate a single generation. At time $t$, the population consists of $N_{wt}$ wild-type bacteria, $N_r$ resistant bacteria, $N_l$ lysogens and $N_p$ phages. One generation consists of three steps:
 
-1. **Expected offspring.** Each bacterial type has its own net growth rate, which is the intrinsic growth rate minus a type-specific loss. For wild-type bacteria the loss is the infection probability multiplied by the number of phages, so the more phages there are, the higher the death rate. For resistant bacteria the loss is the cost of resistance (`cost_r`), and for symbionts it is the induction probability (`induction_prob`). Crowding, set by the carrying capacity $K$, reduces the growth of all three types by the same amount. The number of offspring of each type is then drawn from a Poisson distribution around its expected value.
+1. **Expected offspring.** Each bacterial type has its own net growth rate, which is the intrinsic growth rate minus a type-specific loss. For wild-type bacteria the loss is the infection probability multiplied by the number of phages, so the more phages there are, the higher the death rate. For resistant bacteria the loss is the cost of resistance (`cost_r`), and for lysogens it is the induction probability (`induction_prob`). Crowding, set by the carrying capacity $K$, reduces the growth of all three types by the same amount. The number of offspring of each type is then drawn from a Poisson distribution around its expected value.
 
-2. **Mutation and symbiosis.** The wild-type offspring are divided into three groups with a multinomial draw: they become resistant (probability `mut_rate`), become symbiotic (probability `symbiosis_prob` multiplied by $N_p$, since more phages make it more likely that a wild-type bacterium enters symbiosis), or remain wild type (the remaining probability).
+2. **Mutation and lysogen.** The wild-type offspring are divided into three groups with a multinomial draw: they become resistant (probability `mut_rate`), become lysogenic (probability `lysogen_prob` multiplied by $N_p$, since more phages make it more likely that a wild-type bacterium becomes lysogen), or remain wild type (the remaining probability).
 
-3. **Phage dynamics.** The phage population declines by a fixed fraction (`P_decline`) and gains `P_prod` new phages for each infection of a wild-type bacterium and each induction of a symbiont.
+3. **Phage dynamics.** The phage population declines by a fixed fraction (`P_decline`) and gains `P_prod` new phages for each infection of a wild-type bacterium and each induction of a lysogen.
 
 The result of these steps gives the sizes of all bacterial populations and of the phage population at time $t+1$.
+
+
 ```{r one generation}
-simulate_one_gen <- function(N_wt, N_r, N_s, N_p, infection_prob, induction_prob, symbiosis_prob, mut_rate, cost_r, growth_rate, K, P_decline, P_prod) {
+simulate_one_gen <- function(N_wt, N_r, N_l, N_p, infection_prob, induction_prob, lysogen_prob, mut_rate, cost_r, growth_rate, K, P_decline, P_prod) {
    
-  N_tot <- N_wt + N_r + N_s
+  N_tot <- N_wt + N_r + N_l
   
   # intrinsic growth without losses
   r0 <- growth_rate - 1
@@ -79,51 +81,51 @@ simulate_one_gen <- function(N_wt, N_r, N_s, N_p, infection_prob, induction_prob
   # growth rate of each type minus its specific loss 
   rho_wt <- r0 - infection_prob * N_p # includes phage population effect
   rho_r <- r0 - cost_r
-  rho_s <- r0 - induction_prob
+  rho_l <- r0 - induction_prob
   
   # logistic growth: crowding reduces all types by the same amount --> note that deleterious effect is less strong on wt at lower density --> could exist longer at lower K
   mean_wt <- N_wt * max(0, 1 + rho_wt - r0 * N_tot / K)
   mean_r <- N_r * max(0, 1 + rho_r - r0 * N_tot / K)
-  mean_s <- N_s * max(0, 1 + rho_s - r0 * N_tot / K)
+  mean_l <- N_l * max(0, 1 + rho_l - r0 * N_tot / K)
   
   # Claude input: offspring (Poisson)
   offsp_wt <- rpois(1, mean_wt)
   offsp_r  <- rpois(1, mean_r)
-  offsp_s  <- rpois(1, mean_s)
+  offsp_l  <- rpois(1, mean_l)
   
-  # wt bacteria (offspring) either get infected (& die) or do symbiosis or stay 
+  # wt bacteria (offspring) either get infected (& die) or do lysogen or stay 
   prob_r = mut_rate
-  prob_s = min(symbiosis_prob * N_p, 1 - prob_r) # includes phage population effect
-  prob_wt <- max(0,1 - prob_r - prob_s)
+  prob_l = min(lysogen_prob * N_p, 1 - prob_r) # includes phage population effect
+  prob_wt <- max(0,1 - prob_r - prob_l)
   
-  outcome <- rmultinom(1,offsp_wt,c(prob_r, prob_s, prob_wt))
+  outcome <- rmultinom(1,offsp_wt,c(prob_r, prob_l, prob_wt))
   
   n_resistant <- outcome[1]
-  n_symbiotic <- outcome[2]
+  n_lysogenic <- outcome[2]
   n_wt <- outcome[3]
   
-  # Claude input: new population sizes of wild type, resistant and symbiotes
+  # Claude input: new population sizes of wild type, resistant and lysogenes
   N_wt_new <- n_wt
   N_r_new  <- offsp_r + n_resistant
-  N_s_new  <- offsp_s + n_symbiotic
+  N_l_new  <- offsp_l + n_lysogenic
   
   # phage population growth
   infections = min(N_wt, infection_prob * N_p * N_wt)
-  inductions = induction_prob * N_s
+  inductions = induction_prob * N_l
   P_new = N_p * (1 + P_decline) + P_prod * (infections + inductions)
 
-  return(c(N_wt_new, N_r_new, N_s_new, P_new))
+  return(c(N_wt_new, N_r_new, N_l_new, P_new))
 }
 
 
 # Test the function
 N_wt <- 1000
 N_r <- 0
-N_s <- 0
+N_l <- 0
 N_p <- 5
 infection_prob <- 0.0005
 induction_prob <- 0.001
-symbiosis_prob <-0
+lysogen_prob <-0
 cost_r <- 0.1
 growth_rate <- 1.5
 mut_rate <- 0.1
@@ -133,25 +135,25 @@ P_prod <- 1
 
 
 
-print(simulate_one_gen(N_wt, N_r, N_s, N_p, infection_prob, induction_prob, symbiosis_prob, mut_rate, cost_r, growth_rate, K, P_decline, P_prod))
+print(simulate_one_gen(N_wt, N_r, N_l, N_p, infection_prob, induction_prob, lysogen_prob, mut_rate, cost_r, growth_rate, K, P_decline, P_prod))
 ``` 
 
 ## Simulate a population trajectory
-We can now track the dynamics of the population from one generation to the next, but this is not enough. We want to follow the bacteria and phages from time 0 until the bacteria population either goes extinct or has been rescued by resistant or symbiotic bacteria. The following function repeats the one generation step up to t_max times and stores the sizes of the wild-type, resistant and symbiotic bacteria and also of the phages in every generation. The simulation stops early if all bacteria (wt,r,s) have died.
+We can now track the dynamics of the population from one generation to the next, but this is not enough. We want to follow the bacteria and phages from time 0 until the bacteria population either goes extinct or has been rescued by resistant or lysogenic bacteria. The following function repeats the one generation step up to `t_max` times and stores the sizes of the wild-type, resistant and lysogenic bacteria and also of the phages in every generation. The simulation stops early if all bacteria (wt,r,l) have died.
 
 ```{r population trajectory}
-simulate_pop <- function(N_init_wt, N_init_r, N_init_s, N_init_p, infection_prob, induction_prob, symbiosis_prob, mut_rate, cost_r, growth_rate, t_max, K, P_decline, P_prod) {
+simulate_pop <- function(N_init_wt, N_init_r, N_init_l, N_init_p, infection_prob, induction_prob, lysogen_prob, mut_rate, cost_r, growth_rate, t_max, K, P_decline, P_prod) {
  
   
   # Create the vector in which to save the results
-  pop_vector <- c(N_init_wt, N_init_r, N_init_s, N_init_p)
+  pop_vector <- c(N_init_wt, N_init_r, N_init_l, N_init_p)
   # initiate the variables
-  pop_new <- c(N_init_wt, N_init_r, N_init_s, N_init_p) 
+  pop_new <- c(N_init_wt, N_init_r, N_init_l, N_init_p) 
 
   # run the simulation until generation t_max
   for (i in 1:t_max) {
     # redefine the current population one generation later
-    pop_new <- simulate_one_gen(pop_new[1],pop_new[2], pop_new[3], pop_new[4], infection_prob, induction_prob, symbiosis_prob, mut_rate, cost_r, growth_rate, K, P_decline, P_prod)
+    pop_new <- simulate_one_gen(pop_new[1],pop_new[2], pop_new[3], pop_new[4], infection_prob, induction_prob, lysogen_prob, mut_rate, cost_r, growth_rate, K, P_decline, P_prod)
     # add the new population sizes to the output vector
     pop_vector <- rbind(pop_vector,pop_new)
     # condition to stop the simulation before t_max: the bacteria population goes extinct
@@ -160,7 +162,7 @@ simulate_pop <- function(N_init_wt, N_init_r, N_init_s, N_init_p, infection_prob
   
   # define the row and column names of the output vector
   rownames(pop_vector) <- (0:t_max)[1:length(pop_vector[,1])] # note that the vector has to be cut if the simulation stopped early
-  colnames(pop_vector) <- c("wt","r", "s", "p")
+  colnames(pop_vector) <- c("wt","r", "l", "p")
   # return the result
   return(pop_vector)	
 }
@@ -169,26 +171,26 @@ simulate_pop <- function(N_init_wt, N_init_r, N_init_s, N_init_p, infection_prob
 # Test the function and plot the result
 # set t_max to a value to be used throughout
 
-max_gen <- 2000
+max_gen <- 3000
 
 N_init_wt <- 100
 N_init_r <- 0
-N_init_s <- 0
+N_init_l <- 0
 N_init_p <- 1
 infection_prob <- 0.01
-symbiosis_prob <- 0.002
-growth_rate <- 1.5
-mut_rate <- 0.002 
+lysogen_prob <- 0.002
+growth_rate <- 1.7
+mut_rate <- 0.0005 
 K <- 2000
 P_decline <- -0.5
 P_prod <- 1.5
 # set parameters to vary
-induction_prob = 0.55
-cost_r = 0.55
+induction_prob = 0.7
+cost_r = 0.2
 
 set.seed(10)
 # create your simulation data
-output <- simulate_pop(N_init_wt, N_init_r, N_init_s, N_init_p, infection_prob, induction_prob, symbiosis_prob, mut_rate, cost_r, growth_rate, max_gen, K, P_decline, P_prod)
+output <- simulate_pop(N_init_wt, N_init_r, N_init_l, N_init_p, infection_prob, induction_prob, lysogen_prob, mut_rate, cost_r, growth_rate, max_gen, K, P_decline, P_prod)
 # show the last few lines of the data table
 print(tail(output))
 
@@ -206,24 +208,24 @@ library(tibble)
 # Convert simulation output into a data frame
 output_df <- as.data.frame(output) %>%
   mutate(Generation = as.numeric(rownames(output))) %>%
-  mutate(Total = wt + r + s) 
+  mutate(Total = wt + r + l) 
 
 # Reshape data for ggplot
 plot_data <- output_df %>%
   pivot_longer(
-    cols = c(Total, wt, r, s, p),
+    cols = c(Total, wt, r, l, p),
     names_to = "Population",
     values_to = "Size"
   ) %>%
   mutate(
     Population = factor(
       Population,
-      levels = c("Total", "wt", "r", "s", "p"),
+      levels = c("Total", "wt", "r", "l", "p"),
       labels = c(
         "Total population",
         "Wild type",
         "Resistant",
-        "Symbiotic",
+        "lysogenic",
         "Phages"
       )
     )
@@ -245,18 +247,18 @@ ggplot(
   scale_colour_manual(
     values = c(
       "Total population" = "black",
-      "Wild type" = "#E69F00",
-      "Resistant" = "#0072B2",
-      "Symbiotic" = "#009E73",
-      "Phages" = "grey50"
+      "Wild type" = "blue",
+      "Resistant" = "red",
+      "lysogenic" = "green",
+      "Phages" = "orange"
     )
-  ) + 
+  ) +
   scale_linetype_manual(
     values = c(
       "Total population" = "dotted",
       "Wild type" = "solid",
       "Resistant" = "solid",
-      "Symbiotic" = "solid",
+      "lysogenic" = "solid",
       "Phages" = "solid"
     )
   ) +
@@ -265,7 +267,7 @@ ggplot(
       "Total population" = 0.7,
       "Wild type" = 1,
       "Resistant" = 1,
-      "Symbiotic" = 1,
+      "lysogenic" = 1,
       "Phages" = 1
     )
   ) +
@@ -276,7 +278,7 @@ ggplot(
     linetype = NULL,
     alpha = NULL
   ) +
-  ggtitle("Evolutionary rescue with resistant and symbiotic bacteria") +
+  ggtitle("Evolutionary rescue with resistant and lysogenic bacteria") +
   theme_classic() +
   theme(
     legend.position = "right",
@@ -295,8 +297,13 @@ As you can see if you simulate and plot the output several times, there is a lot
 - ...
 
 ## Analysis
-We want to know 
+Here, we analyze the effects of varying induction probability (~ lysogen death rate) and the cost of r (~ resistant death rate) on three possible outcomes:
 
+1. Extinction: the total bacterial population (wt + r + l) goes extinct
+2. Resistance: wt and l go extinct, r remains
+3. Lysogen: wt and r go extinct, l remains
+
+Coexistence is a category in our analysis when neither l or r have gone extinct by the end of the simulation (after `t_max`generations). Running these cases with longer `t_max`showed that there is in fact no equilibrium between r and l but one of the two was declining and had not yet reached a population size of 0 by the end of the simulation. This case is termed "temporary coexistence". 
 
 ```{r cost_r iterations}
 # set some parameters to fixed values
@@ -305,11 +312,11 @@ max_gen <- 2000
 
 N_init_wt <- 100
 N_init_r <- 0
-N_init_s <- 0
+N_init_l <- 0
 N_init_p <- 1
 infection_prob <- 0.01
-symbiosis_prob <- 0.002
-growth_rate <- 1.5
+lysogen_prob <- 0.002
+growth_rate <- 1.7
 mut_rate <- 0.0005 
 K <- 2000
 P_decline <- -0.5
@@ -319,14 +326,14 @@ P_prod <- 1.5
 no_replicates <- 100
 
 # set parameters to vary
-induction_prob = 0.45
-cost_r = seq(0.05, 0.95, by = 0.1)
+induction_prob = 0.07
+cost_r = seq(0.05, 0.1, by = 0.01)
 
 # initialize data table - where to collect the results
  data_table <- c()
 
  # set seed for reproducibility
- set.seed(10)
+ # set.seed(10)
 
 # run the simulation across  chosen parameter: cost_r
   # loop over selection coefficients
@@ -340,7 +347,7 @@ cost_r = seq(0.05, 0.95, by = 0.1)
       #set.seed(i)
       seed = i
       # run the simulation once with changing parameter
-      one_run <- simulate_pop(N_init_wt, N_init_r, N_init_s, N_init_p, infection_prob, induction_prob, symbiosis_prob, mut_rate, cval, growth_rate, max_gen, K, P_decline, P_prod)
+      one_run <- simulate_pop(N_init_wt, N_init_r, N_init_l, N_init_p, infection_prob, induction_prob, lysogen_prob, mut_rate, cval, growth_rate, max_gen, K, P_decline, P_prod)
       
       # Record population sizes at the final simulated generation
       final_sizes <- as.numeric(tail(one_run, 1))
@@ -354,7 +361,7 @@ cost_r = seq(0.05, 0.95, by = 0.1)
     }
 }
 # define column names of data table
-colnames(data_table) <- c("cost_r", "wt", "r", "s", "p", "seed")
+colnames(data_table) <- c("cost_r", "wt", "r", "l", "p", "seed")
 # show the first lines of the output
 print(head(data_table))
 
@@ -367,19 +374,19 @@ outcomes$outcome <- NA_character_
 for (i in seq_len(nrow(outcomes))) {
   wt <- outcomes[i, "wt"]
   r  <- outcomes[i, "r"]
-  s  <- outcomes[i, "s"]
+  l  <- outcomes[i, "l"]
   seed = outcomes [i, "seed"]
 
-  if (wt == 0 & r == 0 & s == 0) {
+  if (wt == 0 & r == 0 & l == 0) {
     outcomes$outcome[i] <- "extinction"
-  } else if (wt > 0 & r == 0 & s == 0) {
+  } else if (wt > 0 & r == 0 & l == 0) {
     outcomes$outcome[i] <- "wt wins"
-  } else if (r > 0 & wt == 0 & s == 0) {
+  } else if (r > 0 & wt == 0 & l == 0) {
     outcomes$outcome[i] <- "r wins"
-  } else if (s > 0 & wt == 0 & r == 0) {
-    outcomes$outcome[i] <- "s wins"
+  } else if (l > 0 & wt == 0 & r == 0) {
+    outcomes$outcome[i] <- "l wins"
   } else {
-    outcomes$outcome[i] <- "coexistence"
+    outcomes$outcome[i] <- "temporary coexistence"
   }
 }
 
@@ -393,7 +400,7 @@ outcomes$cost_r <- factor(outcomes$cost_r)
 
 # fix the order of the five outcomes so colours are consistent
 outcomes$outcome <- factor(outcomes$outcome,
-  levels = c("extinction", "wt wins", "r wins", "s wins", "coexistence"))
+  levels = c("extinction", "wt wins", "r wins", "l wins", "temporary coexistence"))
 
 # barplot
 ggplot(outcomes, aes(x = cost_r, fill = outcome)) +
@@ -402,8 +409,8 @@ ggplot(outcomes, aes(x = cost_r, fill = outcome)) +
   scale_fill_manual(values = c("extinction"  = "grey50",
                                "wt wins"     = "#E69F00",
                                "r wins"      = "#0072B2",
-                               "s wins"      = "#009E73",
-                               "coexistence" = "#CC79A7"),
+                               "l wins"      = "#009E73",
+                               "temporary coexistence" = "#CC79A7"),
                     drop = FALSE) +
   labs(x = "Cost of resistance (cost_r)", y = "Proportion of replicates", fill = "Outcome") +
   theme_minimal() +
@@ -418,11 +425,11 @@ max_gen <- 2000
 
 N_init_wt <- 100
 N_init_r <- 0
-N_init_s <- 0
+N_init_l <- 0
 N_init_p <- 1
 infection_prob <- 0.01
-symbiosis_prob <- 0.002
-growth_rate <- 1.5
+lysogen_prob <- 0.002
+growth_rate <- 1.7
 mut_rate <- 0.0005 
 K <- 2000
 P_decline <- -0.5
@@ -432,14 +439,14 @@ P_prod <- 1.5
 no_replicates <- 100
 
 # set parameters to vary
-induction_prob = seq(0.05, 0.95, by = 0.1)
-cost_r = 0.45
+induction_prob = 0.07
+cost_r = 0.07
 
 # initialize data table - where to collect the results
  data_table <- c()
 
  # set seed for reproducibility
- set.seed(10)
+ # set.seed(10)
 
 # run the simulation across  chosen parameter: induction_prob
   # loop over selection coefficients
@@ -453,7 +460,7 @@ cost_r = 0.45
       #set.seed(i)
       seed = i
       # run the simulation once with changing parameter
-      one_run <- simulate_pop(N_init_wt, N_init_r, N_init_s, N_init_p, infection_prob, ival, symbiosis_prob, mut_rate, cost_r, growth_rate, max_gen, K, P_decline, P_prod)
+      one_run <- simulate_pop(N_init_wt, N_init_r, N_init_l, N_init_p, infection_prob, ival, lysogen_prob, mut_rate, cost_r, growth_rate, max_gen, K, P_decline, P_prod)
       
       # Record population sizes at the final simulated generation
       final_sizes <- as.numeric(tail(one_run, 1))
@@ -467,7 +474,7 @@ cost_r = 0.45
     }
 }
 # define column names of data table
-colnames(data_table) <- c("induction_prob", "wt", "r", "s", "p", "seed")
+colnames(data_table) <- c("induction_prob", "wt", "r", "l", "p", "seed")
 # show the first lines of the output
 print(head(data_table))
 
@@ -480,19 +487,19 @@ outcomes$outcome <- NA_character_
 for (i in seq_len(nrow(outcomes))) {
   wt <- outcomes[i, "wt"]
   r  <- outcomes[i, "r"]
-  s  <- outcomes[i, "s"]
+  l  <- outcomes[i, "l"]
   seed = outcomes [i, "seed"]
 
-  if (wt == 0 & r == 0 & s == 0) {
+  if (wt == 0 & r == 0 & l == 0) {
     outcomes$outcome[i] <- "extinction"
-  } else if (wt > 0 & r == 0 & s == 0) {
+  } else if (wt > 0 & r == 0 & l == 0) {
     outcomes$outcome[i] <- "wt wins"
-  } else if (r > 0 & wt == 0 & s == 0) {
+  } else if (r > 0 & wt == 0 & l == 0) {
     outcomes$outcome[i] <- "r wins"
-  } else if (s > 0 & wt == 0 & r == 0) {
-    outcomes$outcome[i] <- "s wins"
+  } else if (l > 0 & wt == 0 & r == 0) {
+    outcomes$outcome[i] <- "l wins"
   } else {
-    outcomes$outcome[i] <- "coexistence"
+    outcomes$outcome[i] <- "temporary coexistence"
   }
 }
 
@@ -506,7 +513,7 @@ outcomes$induction_prob <- factor(outcomes$induction_prob)
 
 # fix the order of the five outcomes so colours are consistent
 outcomes$outcome <- factor(outcomes$outcome,
-  levels = c("extinction", "wt wins", "r wins", "s wins", "coexistence"))
+  levels = c("extinction", "wt wins", "r wins", "l wins", "temporary coexistence"))
 
 # barplot
 ggplot(outcomes, aes(x = induction_prob, fill = outcome)) +
@@ -515,8 +522,8 @@ ggplot(outcomes, aes(x = induction_prob, fill = outcome)) +
   scale_fill_manual(values = c("extinction"  = "grey50",
                                "wt wins"     = "#E69F00",
                                "r wins"      = "#0072B2",
-                               "s wins"      = "#009E73",
-                               "coexistence" = "#CC79A7"),
+                               "l wins"      = "#009E73",
+                               "temporary coexistence" = "#CC79A7"),
                     drop = FALSE) +
   labs(x = "Induction probability (induction_prob)", y = "Proportion of replicates", fill = "Outcome") +
   theme_minimal() +
@@ -535,12 +542,12 @@ max_gen <- 2000
 
 N_init_wt <- 100
 N_init_r <- 0
-N_init_s <- 0
+N_init_l <- 0
 N_init_p <- 1
 infection_prob <- 0.01
-symbiosis_prob <- 0.002
-growth_rate <- 1.5
-mut_rate <- 0.002 
+lysogen_prob <- 0.002
+growth_rate <- 1.7
+mut_rate <- 0.0005 
 K <- 2000
 P_decline <- -0.5
 P_prod <- 1.5
@@ -549,8 +556,8 @@ P_prod <- 1.5
 no_replicates <- 100
 
 # set parameters to vary
-induction_prob = seq(0.05, 0.95, by = 0.1)
-cost_r = seq(0.05, 0.95, by = 0.1)
+induction_prob = seq(0.05, 0.95, by = 0.3)
+cost_r = seq(0.05, 0.95, by = 0.3)
 
 # initialize data table - where to collect the results
  data_table <- c()
@@ -572,7 +579,7 @@ cost_r = seq(0.05, 0.95, by = 0.1)
       #set.seed(i) # to be able to go back to that exact simulation
       seed = i
       # run the simulation once with changing parameter
-      one_run <- simulate_pop(N_init_wt, N_init_r, N_init_s, N_init_p, infection_prob, ival, symbiosis_prob, mut_rate, cval, growth_rate, max_gen, K, P_decline, P_prod)
+      one_run <- simulate_pop(N_init_wt, N_init_r, N_init_l, N_init_p, infection_prob, ival, lysogen_prob, mut_rate, cval, growth_rate, max_gen, K, P_decline, P_prod)
       
       # Record population sizes at the final simulated generation
       final_sizes <- as.numeric(tail(one_run, 1))
@@ -586,32 +593,32 @@ cost_r = seq(0.05, 0.95, by = 0.1)
     }
 }}
 # define column names of data table
-colnames(data_table) <- c("induction_prob", "cost_r", "wt", "r", "s", "p", "seed")
+colnames(data_table) <- c("induction_prob", "cost_r", "wt", "r", "l", "p", "seed")
 # show the first lines of the output
 print(head(data_table))
 
 
 ## determine outcomes
-# convert to data frame
+# convert to dataframe
 outcomes = as.data.frame(data_table)
 outcomes$outcome <- NA_character_
 
 for (i in seq_len(nrow(outcomes))) {
   wt <- outcomes[i, "wt"]
   r  <- outcomes[i, "r"]
-  s  <- outcomes[i, "s"]
+  l  <- outcomes[i, "l"]
   seed = outcomes [i, "seed"]
 
-  if (wt == 0 & r == 0 & s == 0) {
+  if (wt == 0 & r == 0 & l == 0) {
     outcomes$outcome[i] <- "extinction"
-  } else if (wt > 0 & r == 0 & s == 0) {
+  } else if (wt > 0 & r == 0 & l == 0) {
     outcomes$outcome[i] <- "wt wins"
-  } else if (r > 0 & wt == 0 & s == 0) {
+  } else if (r > 0 & wt == 0 & l == 0) {
     outcomes$outcome[i] <- "r wins"
-  } else if (s > 0 & wt == 0 & r == 0) {
-    outcomes$outcome[i] <- "s wins"
+  } else if (l > 0 & wt == 0 & r == 0) {
+    outcomes$outcome[i] <- "l wins"
   } else {
-    outcomes$outcome[i] <- "coexistence"
+    outcomes$outcome[i] <- "temporary coexistence"
   }
 }
 
@@ -635,7 +642,7 @@ outcomes$cost_r = factor(outcomes$cost_r)
 
 # fix the order of the five outcomes so colours are consistent
 outcomes$outcome <- factor(outcomes$outcome,
-  levels = c("extinction", "wt wins", "r wins", "s wins", "coexistence"))
+  levels = c("extinction", "wt wins", "r wins", "l wins", "temporary coexistence"))
 
 ## heat map for coexistence (Claude)
 
@@ -661,24 +668,24 @@ ggplot(ext, aes(x = cost_r, y = induction_prob, fill = p_ext)) +
   ggtitle("Probability of extinction")
 
 
-## heat map for symbiosis
-# symbiosis probability per parameter combination
-symb <- outcomes %>%
+## heat map for lysogen
+# lysogen probability per parameter combination
+lys <- outcomes %>%
   group_by(induction_prob, cost_r) %>%
-  summarise(p_symb = mean(outcome == "s wins"),
+  summarise(p_lys = mean(outcome == "l wins"),
             n_runs = n(),
             .groups = "drop")
 
-ggplot(symb, aes(x = cost_r, y = induction_prob, fill = p_symb)) +
+ggplot(lys, aes(x = cost_r, y = induction_prob, fill = p_lys)) +
   geom_tile(colour = "white", linewidth = 0.8) +
-  geom_text(aes(label = sprintf("%.2f", p_symb)), size = 4) +
+  geom_text(aes(label = sprintf("%.2f", p_lys)), size = 4) +
   scale_fill_gradient(low = "white", high = "#009E73",
-                      limits = c(0, 1), name = "P(symbiosis)") +
+                      limits = c(0, 1), name = "P(lysogen)") +
   labs(x = "Cost of resistance (cost_r)",
        y = "Induction probability (induction_prob)") +
   coord_equal() +
   theme_minimal() +
-  ggtitle("Probability of symbiosis")
+  ggtitle("Probability of lysogen")
 
 ## heat map for resistance
 # resistance probability per parameter combination
@@ -703,5 +710,7 @@ ggplot(res, aes(x = cost_r, y = induction_prob, fill = p_res)) +
 
 
 ```
-## AI use
 
+
+## Limitations/Thoughts
+- start with 1 phage. not so realistic, also if want to test effect of phage therapy varying this could be a thing
