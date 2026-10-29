@@ -169,7 +169,7 @@ simulate_pop <- function(N_init_wt, N_init_r, N_init_s, N_init_p, infection_prob
 # Test the function and plot the result
 # set t_max to a value to be used throughout
 
-max_gen <- 3000
+max_gen <- 2000
 
 N_init_wt <- 100
 N_init_r <- 0
@@ -177,14 +177,14 @@ N_init_s <- 0
 N_init_p <- 1
 infection_prob <- 0.01
 symbiosis_prob <- 0.002
-growth_rate <- 1.7
-mut_rate <- 0.0005 
+growth_rate <- 1.5
+mut_rate <- 0.002 
 K <- 2000
 P_decline <- -0.5
 P_prod <- 1.5
 # set parameters to vary
-induction_prob = 0.7
-cost_r = 0.2
+induction_prob = 0.55
+cost_r = 0.55
 
 set.seed(10)
 # create your simulation data
@@ -245,12 +245,12 @@ ggplot(
   scale_colour_manual(
     values = c(
       "Total population" = "black",
-      "Wild type" = "blue",
-      "Resistant" = "red",
-      "Symbiotic" = "green",
-      "Phages" = "orange"
+      "Wild type" = "#E69F00",
+      "Resistant" = "#0072B2",
+      "Symbiotic" = "#009E73",
+      "Phages" = "grey50"
     )
-  ) +
+  ) + 
   scale_linetype_manual(
     values = c(
       "Total population" = "dotted",
@@ -309,7 +309,7 @@ N_init_s <- 0
 N_init_p <- 1
 infection_prob <- 0.01
 symbiosis_prob <- 0.002
-growth_rate <- 1.7
+growth_rate <- 1.5
 mut_rate <- 0.0005 
 K <- 2000
 P_decline <- -0.5
@@ -319,14 +319,14 @@ P_prod <- 1.5
 no_replicates <- 100
 
 # set parameters to vary
-induction_prob = 0.07
-cost_r = seq(0.05, 0.1, by = 0.01)
+induction_prob = 0.45
+cost_r = seq(0.05, 0.95, by = 0.1)
 
 # initialize data table - where to collect the results
  data_table <- c()
 
  # set seed for reproducibility
- # set.seed(10)
+ set.seed(10)
 
 # run the simulation across  chosen parameter: cost_r
   # loop over selection coefficients
@@ -422,7 +422,7 @@ N_init_s <- 0
 N_init_p <- 1
 infection_prob <- 0.01
 symbiosis_prob <- 0.002
-growth_rate <- 1.7
+growth_rate <- 1.5
 mut_rate <- 0.0005 
 K <- 2000
 P_decline <- -0.5
@@ -432,14 +432,14 @@ P_prod <- 1.5
 no_replicates <- 100
 
 # set parameters to vary
-induction_prob = 0.07
-cost_r = 0.07
+induction_prob = seq(0.05, 0.95, by = 0.1)
+cost_r = 0.45
 
 # initialize data table - where to collect the results
  data_table <- c()
 
  # set seed for reproducibility
- # set.seed(10)
+ set.seed(10)
 
 # run the simulation across  chosen parameter: induction_prob
   # loop over selection coefficients
@@ -539,8 +539,8 @@ N_init_s <- 0
 N_init_p <- 1
 infection_prob <- 0.01
 symbiosis_prob <- 0.002
-growth_rate <- 1.7
-mut_rate <- 0.0005 
+growth_rate <- 1.5
+mut_rate <- 0.002 
 K <- 2000
 P_decline <- -0.5
 P_prod <- 1.5
@@ -549,8 +549,8 @@ P_prod <- 1.5
 no_replicates <- 100
 
 # set parameters to vary
-induction_prob = seq(0.05, 0.95, by = 0.3)
-cost_r = seq(0.05, 0.95, by = 0.3)
+induction_prob = seq(0.05, 0.95, by = 0.1)
+cost_r = seq(0.05, 0.95, by = 0.1)
 
 # initialize data table - where to collect the results
  data_table <- c()
@@ -592,7 +592,7 @@ print(head(data_table))
 
 
 ## determine outcomes
-# convert to dataframe
+# convert to data frame
 outcomes = as.data.frame(data_table)
 outcomes$outcome <- NA_character_
 
