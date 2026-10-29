@@ -546,7 +546,7 @@ P_decline <- -0.5
 P_prod <- 1.5
 
 # determine how often to run the simulation for each set of parameters
-no_replicates <- 10
+no_replicates <- 100
 
 # set parameters to vary
 induction_prob = seq(0.05, 0.95, by = 0.3)
@@ -619,13 +619,13 @@ print(head(outcomes))
 print(tail(outcomes))
 
 # save preliminary data for plotting (seed =10)
-write.csv(outcomes, "/Users/macbookair/Library/CloudStorage/OneDrive-Personal/THEE prakti/THEE Coevolution/data/trial_outcomes.csv")
+# write.csv(outcomes, "/Users/macbookair/Library/CloudStorage/OneDrive-Personal/THEE prakti/THEE Coevolution/data/trial_outcomes.csv")
 
 
 ```
 
 ```{r heat maps}
-outcomes = read.csv("/Users/macbookair/Library/CloudStorage/OneDrive-Personal/THEE prakti/THEE Coevolution/data/trial_outcomes.csv")
+# outcomes = read.csv("/Users/aylin/Documents/GitHub/THEE-Coevolution-HGT/data/trial_outcomes.csv")
 
 ## plot outcomes
 
