@@ -61,7 +61,12 @@ install.packages(c("ggplot2", "tidyr", "dplyr", "tibble"))
 | `induction_prob` | Varied parameter | Probability (per generation) that a lysogenic bacterium is killed by its own dormant phage | 0 to 1 | varied in the analysis |
 | `cost_r` | Varied parameter | Fraction of offspring that resistant bacteria lose compared to wt (fitness cost of resistance) | 0 to 1 | varied in the analysis |
 
+## Idea of the model
+Our model describes a bacterial population that is suddenly exposed to phages, as in phage therapy. In the new environment the wild-type (wt) bacteria are unfit, because phages infect and kill them. The population can only be rescued if some bacteria acquire a way to survive the phages. We compare two such strategies: resistance, which is independent of the phages and lysogeny, which is phage-dependent.
+The model asks how the two strategies perform under different conditions and when the population goes extinct. 
 
+![Model Figure](Model_Figure.png)
+*Figure 1: Life cycle of one generation in the model*
 
 ## References
 Alexander HK et al. (2014) Evolutionary rescue: linking theory for conservation and medicine. *Evolutionary Applications* 7: 1161-79. DOI:https://doi.org/10.1111/eva.12221
