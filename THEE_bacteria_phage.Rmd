@@ -1151,6 +1151,7 @@ AI was used on the R code for
 - debugging
 - implementing concepts in the base code (e.g., carrying capacity)
 - generating plots
+- RMarkdown layout
 
 ## Supplementary figures
 
