@@ -15,7 +15,7 @@ The following are the two possible survival strategies that the bacteria populat
 
 1. Resistance (slow but safe): wt offspring have a resistance mutation at a low rate (mut_rate). Resistant bacteria are immune to the phages and are not killed by infection. Resistance is permanent, but it comes with a fitness cost (cost_r) that reduces their offspring number. This strategy is phage-independent. 
 
-2. Lysogen (fast but risky): wt bacteria can enter a lysogen relationship with the phage (lysogen_prob) and this becomes more likely the more phages are present. Lysogenic bacteria carry a dormant phage and therefore don't die from infection. However, they can later be killed when their own phage is induced (induction_prob), which releases new phages into the environment. This strategy is phage-dependent
+2. Lysogen (fast but risky): wt bacteria can enter a lysogen relationship with the phage (lysogen_prob) and this becomes more likely the more phages are present. Lysogenic bacteria carry a dormant phage and therefore don't die from infection. However, they can later be killed when their own phage is induced (induction_prob), which releases new phages into the environment. This strategy is phage-dependent.
 
 So the following are the four possible outcomes of our model:
 1.Extinction
@@ -29,7 +29,7 @@ All bacterial types grow with a shared carrying capacity (K) and the phage popul
 
 
 ## Idea of model:
-This model can be thought of as a simulation of phage therapy. Phage therapy has recently gained interest as an alternative therapy to antibiotics, which is limited by the spread of antibiotic resistances. A major challenge for phage therapy is the fast adaptation of the pathogenic bacteria to the phages (Karamlou 2025. 
+This model can be thought of as a simulation of phage therapy. Phage therapy has recently gained interest as an alternative therapy to antibiotics, which is limited by the spread of antibiotic resistances. A major challenge for phage therapy is the fast adaptation of the pathogenic bacteria to the phages (Karamlou 2025). 
 
 The lysogen strategy is fast but risky. Every wt cell can become a lysogen right away, but they can later be killed by induction.
 Resistance is slow but safe. It needs a rare mutation and has a growth cost, but it is permanent.
@@ -87,7 +87,7 @@ Which strategy is the most successful?
 | `cost_r` | Varied parameter | Fraction of offspring that resistant bacteria lose compared to wt (fitness cost of resistance) | 0 to 1 | varied in the analysis |
 
 ## R setup
-Run this chunk to ensure you have all needed packages. Enter your local pathname to the GitHub repository to access the simulation data. 
+Run this chunk to ensure you have all needed packages. Enter your local path name to the GitHub repository to access the simulation data. 
 
 ```{r setup, echo = F}
 library(ggplot2)
@@ -675,8 +675,6 @@ ggplot(
 
 ```
 
-
-
 ## Analysis
 Here, we analyze the effects of varying induction probability (~ lysogen death rate) and the cost of r (~ resistant death rate) on three possible outcomes:
 
@@ -934,7 +932,8 @@ ggplot(outcomes, aes(x = induction_prob, fill = outcome)) +
 
 ```
 
-
+### Combined effect of induction_prob and cost_r
+Here we vary induction probability (~lysogen death rate) and the cost of resistance (~ resistant death rate) at the same time, in a full grid of all combinations. For each combination, the simulation is repeated many times (`no_replicates`) and the population sizes at the final generation are recorded. Each replicate is then assigned one of the five outcomes (extinction, wt wins, r wins, l wins, temporary coexistence). The table is saved as a csv file so that the heat maps below can be recreated without re-running the (slow) simulations.
 
 ```{r cost_r and induction_prob}
 # set some parameters to fixed values
@@ -1029,6 +1028,14 @@ print(tail(outcomes))
 # save data with today's date. any data generated on the same date will overwrite this file
 write.csv(outcomes, paste(your_pathname, "/data/combined_r_l_data", Sys.Date(), ".csv", sep = ""))
 ```
+
+### Heat maps of the combined analysis
+The saved data from the grid simulation above is read in and for each combination of induction_prob (y axis) and cost_r (x axis), the proportion of replicates with a given outcome is calculated. This is shown as four heat maps (the number in each tile is the proportion of replicates, from 0 to 1):
+
+1. Probability of extinction of the total population
+2. Probability of survival of the total population (= 1 - extinction; this counts every outcome except extinction, including wt wins and temporary coexistence)
+3. Probability that lysogens (l) win
+4. Probability that resistant bacteria (r) win
 
 ```{r heat maps}
 # get data
