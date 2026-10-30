@@ -29,6 +29,8 @@ All bacterial types grow with a shared carrying capacity (K) and the phage popul
 
 
 ## Idea of model:
+This model can be thought of as a simulation of phage therapy. Phage therapy has recently gained interest as an alternative therapy to antibiotics, which is limited by the spread of antibiotic resistances. A major challenge for phage therapy is the fast adaptation of the pathogenic bacteria to the phages (Karamlou 2025. 
+
 The lysogen strategy is fast but risky. Every wt cell can become a lysogen right away, but they can later be killed by induction.
 Resistance is slow but safe. It needs a rare mutation and has a growth cost, but it is permanent.
 Which strategy is the most successful?
@@ -80,7 +82,7 @@ induction_prob: 0.35
 ## R setup
 Run this chunk to ensure you have all needed packages. Enter your local pathname to the GitHub repository to access the simulation data. 
 
-```{r setup}
+```{r setup, echo = F}
 library(ggplot2)
 library(tidyr)
 library(dplyr)
@@ -153,21 +155,21 @@ simulate_one_gen <- function(N_wt, N_r, N_l, N_p, infection_prob, induction_prob
 
 
 # Test the function
-N_wt <- 1000
-N_r <- 0
-N_l <- 0
-N_p <- 5
-infection_prob <- 0.01
-induction_prob <- 0.55
-lysogen_prob <-0.002
-cost_r <- 0.55
-growth_rate <- 1.5
-mut_rate <- 0.002
-K <- 2000
-P_decline <- -0.5
-P_prod <- 1.5
-
-print(simulate_one_gen(N_wt, N_r, N_l, N_p, infection_prob, induction_prob, lysogen_prob, mut_rate, cost_r, growth_rate, K, P_decline, P_prod))
+# N_wt <- 1000
+# N_r <- 0
+# N_l <- 0
+# N_p <- 5
+# infection_prob <- 0.01
+# induction_prob <- 0.55
+# lysogen_prob <-0.002
+# cost_r <- 0.55
+# growth_rate <- 1.5
+# mut_rate <- 0.002
+# K <- 2000
+# P_decline <- -0.5
+# P_prod <- 1.5
+# 
+# print(simulate_one_gen(N_wt, N_r, N_l, N_p, infection_prob, induction_prob, lysogen_prob, mut_rate, cost_r, growth_rate, K, P_decline, P_prod))
 ``` 
 
 ## Simulate a population trajectory
@@ -1126,14 +1128,22 @@ ggplot(res, aes(x = cost_r, y = induction_prob, fill = p_res)) +
 - outcome is dependent on K: if K is lower, l is a more likely outcome. would be interesting to analyze this but no time. 
 - due to interaction with phage population, the lysogen generation becomes deterministic instead of stochastic (like the resistant generation). it is boosted by phages. above a threshold of around 0.5 induction probabilty, the lysogen population abruptly looses its advantage as the fitness cost is too high, the population cannot be sustained.
 
+## References
+Alexander HK et al. (2014) Evolutionary rescue: linking theory for conservation and medicine. *Evolutionary Applications* 7: 1161-79. DOI: https://doi.org/10.1111/eva.12221
+
+Karamlou S et al. (2025) Bacterial resistance to phage therapy: Mechanisms and strategies to overcome it. *Current Molecular Pharmacology* 18: 108-122. DOI: https://doi.org/10.1016/j.cmp.2025.11.003
+
+Orr HA, Unckless RL (2014) The Population Genetics of Evolutionary Rescue. . *PLoS Genet* 10(8): e1004551. DOI:10.1371/journal.pgen.1004551
+
+
 ## Author contributions
 - 
 
-## AI use
+## AI use declaration
 AI was used on the R code for
 - debugging
-- implementing concepts in the base code (carrying capacity)
-- plots
+- implementing concepts in the base code (e.g., carrying capacity)
+- generating plots
 
 ## Supplementary figures
 

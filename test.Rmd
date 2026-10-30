@@ -1,0 +1,55 @@
+---
+title: "Bacteria Evolutionary Rescue: Resistance or Lysogen"
+author: "Aylin & Marika"
+date: "2026-10-15"
+output:
+  html_document:
+    df_print: paged
+bibliography: references.bib
+---
+
+## Simulating evolutionary rescue in discrete time
+
+In this notebook, we are implementing simulations of evolutionary rescue in a bacterial population under phage pressure. The model is based on a single-mutation, discrete-time framework, which we extended by a phage population and a second rescue strategy. The model is as follows: a haploid bacterial population starts with a given number of wild-type (wt) bacteria and together with a population of free phages. Because of the phages, the wild-type is unfit: in each generation wt bacteria are killed by phage infection and the more phages there are, the higher the death rate of the wild-type.
+The following are the two possible survival strategies that the bacteria population have:
+
+1. Resistance (slow but safe): wt offspring have a resistance mutation at a low rate (mut_rate). Resistant bacteria are immune to the phages and are not killed by infection. Resistance is permanent, but it comes with a fitness cost (cost_r) that reduces their offspring number. This strategy is phage-independent. 
+
+2. Lysogen (fast but risky): wt bacteria can enter a lysogen relationship with the phage (lysogen_prob) and this becomes more likely the more phages are present. Lysogenic bacteria carry a dormant phage and therefore don't die from infection. However, they can later be killed when their own phage is induced (induction_prob), which releases new phages into the environment. This strategy is phage-dependent
+
+So the following are the four possible outcomes of our model:
+1.Extinction
+2.Only lysogen persists
+3.Only resistance persists
+(4.Coexistence occurs --> not possible in our model)
+(5.Only wt persists -> not possible)
+
+
+All bacterial types grow with a shared carrying capacity (K) and the phage population is updated each generation from phage decline (P_decline) and from phage production at infection and induction events (P_prod). Resistant and lysogenic bacteria start at a population number of 0, so they have to arise from wt bacteria through mutations or integration (becoming a lysogen) and then spread before the bacterial population goes extinct. Rescue means that the bacterial population recovers and persists, so the central question is which strategy (resistance or lysogen) rescues the population and under which conditions.
+
+
+## Idea of model:
+This model can be thought of as a simulation of phage therapy. Phage therapy has recently gained interest as an alternative therapy to antibiotics, which is limited by the spread of antibiotic resistances. A major challenge for phage therapy is the fast adaptation of the pathogenic bacteria to the phages [@karamlou2026]. 
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+```{r cars}
+summary(cars)
+```
+
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r pressure, echo=FALSE}
+plot(pressure)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
