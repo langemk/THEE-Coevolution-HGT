@@ -37,47 +37,54 @@ Which strategy is the most successful?
 
 ## List of variables and parameters
 
-**Parameters:**
+**Variables:**
 
 - $N_wt$ current size of the wild-type bacteria population (changes over time)
 - $N_r$ current size of the resistant bacteria population (changes over time)
 - $N_l$ current size of the lysogenic bacteria population (changes over time)
 - $N_P$ current size of the Phage population (changes over time)
+
+**Parameters:**
+
 - `N_init_wt` initial population size of wild-type population (should be a positive integer). Fixed to 100
 - `N_init_r` initial population size of the mutant resistant population (should be a non-negative integer). Fixed to 0
 - `N_init_l` initial population size of the lysogenic population (should be a non-negative integer). Fixed to 0
 - `N_init_P` initial population size of the phage population (should be a positive integer). Fixed to 1
-- `growth_rate` average number of offspring per bacterium (wt, r and l) per generation (should be a non-negative integer). Fixed to 1.5
+- `growth_rate` average number of offspring per bacterium (wt, r and l) per generation (should be non-negative). Fixed to 1.5
 - `lysogen_prob` probability that wt bacterium becomes lysogenic (range 0-1), should be bigger than mutation rate. Fixed to 0.002
 - `mut_rate` probability that an offspring of wt bacterium mutates to resistant. Fixed to 0.002
 - `infection_prob` probability that wt bacterium is infected by a phage per generation (range 0-1). Fixed to 0.01
 - `K` carrying capacity of the total bacteria population (wt + r + l) (positive integer). Fixed to 2000
-- `P_decline` fraction of phages decaying every generation (non-positive integer). Fixed to -0.5
-- `P_prod` number of new phages produced from an infection or induction (non-negative integer). Fixed to 1.5
-- `t_max` number of generations after which to stop the simulation (should be an integer > 0; this is not a model parameter but a setting for the simulations). In the code presented here, the simulation stops automatically if the population goes extinct, or if it recovers and exceeds 3 times the original total population size, so `t_max` can be set to a large value without creating extremely long simulation times. Fixed to 2000
+- `P_decline` fraction of phages decaying every generation (non-positive). Fixed to -0.5
+- `P_prod` number of new phages produced from an infection or induction (non-negative). Fixed to 1.5
+- `t_max` number of generations after which to stop the simulation (should be an integer > 0; this is not a model parameter but a setting for the simulations). In the code presented here, the simulation stops automatically if the population goes extinct or when reaching t_max. Fixed to 2000
 
 **Variable parameters for analysis:**
 
 - `induction_prob` probability (per generation) that a lysogenic bacterium is killed by its own dormant phage (range 0-1).
 - `cost_r` fraction of offspring that resistant bacteria lose compared to wt (i.e., fitness cost of resistance) (range 0-1).
 
-Fixed parameters:
-max_gen <- 2000
-N_init_wt <- 100
-N_init_r <- 0
-N_init_l <- 0
-N_init_p <- 1
-infection_prob <- 0.01
-lysogen_prob <- 0.002
-growth_rate <- 1.5
-mut_rate <- 0.002 
-K <- 2000
-P_decline <- -0.5
-P_prod <- 1.5
 
-not fix:
-cost_r: 0.35 
-induction_prob: 0.35
+| Name | Type | Description | Allowed range | Value |
+|:-----|:-----|:------------|:--------------|:------|
+| $N_{wt}$ | State variable | Current size of the wild-type bacteria population | integer ≥ 0 | changes over time |
+| $N_r$ | State variable | Current size of the resistant bacteria population | integer ≥ 0 | changes over time |
+| $N_l$ | State variable | Current size of the lysogenic bacteria population | integer ≥ 0 | changes over time |
+| $N_P$ | State variable | Current size of the phage population | ≥ 0 | changes over time |
+| `N_init_wt` | Initial condition | Initial size of the wild-type population | positive integer | 100 |
+| `N_init_r` | Initial condition | Initial size of the resistant mutant population | integer ≥ 0 | 0 |
+| `N_init_l` | Initial condition | Initial size of the lysogenic population | integer ≥ 0 | 0 |
+| `N_init_P` | Initial condition | Initial size of the phage population | positive integer | 1 |
+| `growth_rate` | Model parameter | Average number of offspring per bacterium (wt, r and l) per generation | ≥ 0 | 1.5 |
+| `lysogen_prob` | Model parameter | Probability that a wt bacterium becomes lysogenic | 0 to 1 | 0.002 |
+| `mut_rate` | Model parameter | Probability that an offspring of a wt bacterium mutates to resistant | 0 to 1 | 0.002 |
+| `infection_prob` | Model parameter | Probability that a wt bacterium is infected by a phage per generation | 0 to 1 | 0.01 |
+| `K` | Model parameter | Carrying capacity of the total bacteria population (wt + r + l) | positive integer | 2000 |
+| `P_decline` | Model parameter | Fraction of phages decaying every generation (entered as a negative number) | ≤ 0 | -0.5 |
+| `P_prod` | Model parameter | Number of new phages produced per infection or induction | ≥ 0 | 1.5 |
+| `t_max` | Simulation setting | Number of generations after which the simulation stops (not a model parameter). The simulation also stops automatically if the bacterial population goes extinct | integer > 0 | 2000 |
+| `induction_prob` | Varied parameter | Probability (per generation) that a lysogenic bacterium is killed by its own dormant phage | 0 to 1 | varied in the analysis |
+| `cost_r` | Varied parameter | Fraction of offspring that resistant bacteria lose compared to wt (fitness cost of resistance) | 0 to 1 | varied in the analysis |
 
 ## R setup
 Run this chunk to ensure you have all needed packages. Enter your local pathname to the GitHub repository to access the simulation data. 

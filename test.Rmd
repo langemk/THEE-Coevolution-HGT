@@ -5,8 +5,7 @@ date: "2026-10-15"
 output:
   html_document:
     df_print: paged
-bibliography: references.bib
----
+    ---
 
 ## Simulating evolutionary rescue in discrete time
 
@@ -29,7 +28,29 @@ All bacterial types grow with a shared carrying capacity (K) and the phage popul
 
 
 ## Idea of model:
-This model can be thought of as a simulation of phage therapy. Phage therapy has recently gained interest as an alternative therapy to antibiotics, which is limited by the spread of antibiotic resistances. A major challenge for phage therapy is the fast adaptation of the pathogenic bacteria to the phages [@karamlou2026]. 
+This model can be thought of as a simulation of phage therapy. Phage therapy has recently gained interest as an alternative therapy to antibiotics, which is limited by the spread of antibiotic resistances. A major challenge for phage therapy is the fast adaptation of the pathogenic bacteria to the phages.
+
+
+| Name | Type | Description | Allowed range | Value |
+|:-----|:-----|:------------|:--------------|:------|
+| $N_{wt}$ | State variable | Current size of the wild-type bacteria population | integer ≥ 0 | changes over time |
+| $N_r$ | State variable | Current size of the resistant bacteria population | integer ≥ 0 | changes over time |
+| $N_l$ | State variable | Current size of the lysogenic bacteria population | integer ≥ 0 | changes over time |
+| $N_P$ | State variable | Current size of the phage population | ≥ 0 | changes over time |
+| `N_init_wt` | Initial condition | Initial size of the wild-type population | positive integer | 100 |
+| `N_init_r` | Initial condition | Initial size of the resistant mutant population | integer ≥ 0 | 0 |
+| `N_init_l` | Initial condition | Initial size of the lysogenic population | integer ≥ 0 | 0 |
+| `N_init_P` | Initial condition | Initial size of the phage population | positive integer | 1 |
+| `growth_rate` | Model parameter | Average number of offspring per bacterium (wt, r and l) per generation | ≥ 0 | 1.5 |
+| `lysogen_prob` | Model parameter | Probability that a wt bacterium becomes lysogenic | 0 to 1; must be larger than `mut_rate` | 0.002 |
+| `mut_rate` | Model parameter | Probability that an offspring of a wt bacterium mutates to resistant | 0 to 1 | 0.002 |
+| `infection_prob` | Model parameter | Probability that a wt bacterium is infected by a phage per generation | 0 to 1 | 0.01 |
+| `K` | Model parameter | Carrying capacity of the total bacteria population (wt + r + l) | positive integer | 2000 |
+| `P_decline` | Model parameter | Fraction of phages decaying every generation (entered as a negative number) | ≤ 0 | -0.5 |
+| `P_prod` | Model parameter | Number of new phages produced per infection or induction | ≥ 0 | 1.5 |
+| `t_max` | Simulation setting | Number of generations after which the simulation stops (not a model parameter). The simulation also stops automatically if the bacterial population goes extinct | integer > 0 | 2000 |
+| `induction_prob` | Varied parameter | Probability (per generation) that a lysogenic bacterium is killed by its own dormant phage | 0 to 1 | varied in the analysis |
+| `cost_r` | Varied parameter | Fraction of offspring that resistant bacteria lose compared to wt (fitness cost of resistance) | 0 to 1 | varied in the analysis |
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
