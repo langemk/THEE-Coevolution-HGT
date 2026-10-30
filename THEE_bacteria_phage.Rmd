@@ -41,18 +41,23 @@ Which strategy is the most successful?
 - $N_r$ current size of the resistant bacteria population (changes over time)
 - $N_l$ current size of the lysogenic bacteria population (changes over time)
 - $N_P$ current size of the Phage population (changes over time)
-- `N_init_wt` initial population size of wild-type population (should be a positive integer)
-- `N_init_r` initial population size of the mutant resistant population (should be a non-negative integer)
-- `N_init_l` initial population size of the lysogenic population (should be a non-negative integer)
-- `N_init_P` initial population size of the phage population (should be a positive integer)
-- `growth_rate` average number of offspring per bacterium (wt, r and l) per generation (should be a non-negative integer)
-- `lysogen_prob` probability that wt bacterium becomes lysogenic (range 0-1), should be bigger than mutation rate
-- `mut_rate` probability that an offspring of wt bacterium mutates to resistant
-- `infection_prob` probability that wt bacterium is infected by a phage per generation (range 0-1) ~  wt death rate
-- `K` carrying capacity of the total bacteria population (wt + r + l) (positive integer)
-- `P_decline` fixed decline of phages (non-positive integer)
-- `P_prod` Number of new phages produced from an infection or induction (non-negative integer)
-- `t_max` number of generations after which to stop the simulation (should be an integer > 0; this is not a model parameter but a setting for the simulations). In the code presented here, the simulation stops automatically if the population goes extinct, or if it recovers and exceeds 3 times the original total population size, so `t_max` can be set to a large value without creating extremely long simulation times.
+- `N_init_wt` initial population size of wild-type population (should be a positive integer). Fixed to 100
+- `N_init_r` initial population size of the mutant resistant population (should be a non-negative integer). Fixed to 0
+- `N_init_l` initial population size of the lysogenic population (should be a non-negative integer). Fixed to 0
+- `N_init_P` initial population size of the phage population (should be a positive integer). Fixed to 1
+- `growth_rate` average number of offspring per bacterium (wt, r and l) per generation (should be a non-negative integer). Fixed to 1.5
+- `lysogen_prob` probability that wt bacterium becomes lysogenic (range 0-1), should be bigger than mutation rate. Fixed to 0.002
+- `mut_rate` probability that an offspring of wt bacterium mutates to resistant. Fixed to 0.002
+- `infection_prob` probability that wt bacterium is infected by a phage per generation (range 0-1). Fixed to 0.01
+- `K` carrying capacity of the total bacteria population (wt + r + l) (positive integer). Fixed to 2000
+- `P_decline` fraction of phages decaying every generation (non-positive integer). Fixed to -0.5
+- `P_prod` number of new phages produced from an infection or induction (non-negative integer). Fixed to 1.5
+- `t_max` number of generations after which to stop the simulation (should be an integer > 0; this is not a model parameter but a setting for the simulations). In the code presented here, the simulation stops automatically if the population goes extinct, or if it recovers and exceeds 3 times the original total population size, so `t_max` can be set to a large value without creating extremely long simulation times. Fixed to 2000
+
+**Variable parameters for analysis:**
+
+- `induction_prob` probability (per generation) that a lysogenic bacterium is killed by its own dormant phage (range 0-1).
+- `cost_r` fraction of offspring that resistant bacteria lose compared to wt (i.e., fitness cost of resistance) (range 0-1).
 
 Fixed parameters:
 max_gen <- 2000
@@ -72,10 +77,20 @@ not fix:
 cost_r: 0.35 
 induction_prob: 0.35
 
-**Variables:**
+## R setup
+Run this chunk to ensure you have all needed packages. Enter your local pathname to the GitHub repository to access the simulation data. 
 
-- `induction_prob` probability (per generation) that a lysogenic bacterium is killed by its own dormant phage (range 0-1) ~ lysogenic death rate, should be smaller than infection rate
-- `cost_r` fraction of offspring that resistant bacteria lose compared to wt -> fitness cost of resistance (0-1) -> 1 is maximal cost, 0 is no cost. Cost should be smaller than induction rate
+```{r setup}
+library(ggplot2)
+library(tidyr)
+library(dplyr)
+library(tibble)
+
+
+your_pathname = "/Users/macbookair/Library/CloudStorage/OneDrive-Personal/THEE prakti/THEE Coevolution"
+
+```
+
 
 ## Simulate one generation of population size change
 We want to follow the numbers of wild-type, resistant and lysogenic bacteria over time, as well as the phage population. As a first step, we simulate a single generation. At time $t$, the population consists of $N_{wt}$ wild-type bacteria, $N_r$ resistant bacteria, $N_l$ lysogens and $N_p$ phages. One generation consists of three steps:
@@ -183,9 +198,11 @@ simulate_pop <- function(N_init_wt, N_init_r, N_init_l, N_init_p, infection_prob
   # return the result
   return(pop_vector)	
 }
+```
 
 
-# Test the function and plot the result
+```{r all strategies}
+# simulation and plotting of complete model
 # set t_max to a value to be used throughout
 
 max_gen <- 2000
@@ -218,12 +235,6 @@ print(tail(output))
 # determine x axis range 
 x_range <- 0:(length(output[,1])-1)
 
-# plotting with ggplot
-library(ggplot2)
-library(tidyr)
-library(dplyr)
-library(tibble)
-
 # Convert simulation output into a data frame
 output_df <- as.data.frame(output) %>%
   mutate(Generation = as.numeric(rownames(output))) %>%
@@ -244,7 +255,7 @@ plot_data <- output_df %>%
         "Total population",
         "Wild type",
         "Resistant",
-        "lysogenic",
+        "Lysogenic",
         "Phages"
       )
     )
@@ -266,10 +277,10 @@ ggplot(
   scale_colour_manual(
     values = c(
       "Total population" = "black",
-      "Wild type" = "blue",
-      "Resistant" = "red",
-      "lysogenic" = "green",
-      "Phages" = "orange"
+      "Wild type" = "#E69F00",
+      "Resistant" = "#0072B2",
+      "Lysogenic" = "#009E73",
+      "Phages" = "#CC79A7"
     )
   ) +
   scale_linetype_manual(
@@ -277,7 +288,7 @@ ggplot(
       "Total population" = "dotted",
       "Wild type" = "solid",
       "Resistant" = "solid",
-      "lysogenic" = "solid",
+      "Lysogenic" = "solid",
       "Phages" = "solid"
     )
   ) +
@@ -286,7 +297,7 @@ ggplot(
       "Total population" = 0.7,
       "Wild type" = 1,
       "Resistant" = 1,
-      "lysogenic" = 1,
+      "Lysogenic" = 1,
       "Phages" = 1
     )
   ) +
@@ -305,8 +316,11 @@ ggplot(
     legend.background = element_blank()
   )
 
-``` 
+```
+
+
 ```{r No survival strategy}
+# simulation and plotting of model without resistance or lysogens
 
 max_gen <- 2000
 N_init_wt <- 100
@@ -337,11 +351,6 @@ print(tail(output))
 # determine x axis range 
 x_range <- 0:(length(output[,1])-1)
 
-# plotting with ggplot
-library(ggplot2)
-library(tidyr)
-library(dplyr)
-library(tibble)
 
 # Convert simulation output into a data frame
 output_df <- as.data.frame(output) %>%
@@ -363,7 +372,7 @@ plot_data <- output_df %>%
         "Total population",
         "Wild type",
         "Resistant",
-        "lysogenic",
+        "Lysogenic",
         "Phages"
       )
     )
@@ -385,10 +394,10 @@ ggplot(
   scale_colour_manual(
     values = c(
       "Total population" = "black",
-      "Wild type" = "blue",
-      "Resistant" = "red",
-      "lysogenic" = "green",
-      "Phages" = "orange"
+      "Wild type" = "#E69F00",
+      "Resistant" = "#0072B2",
+      "Lysogenic" = "#009E73",
+      "Phages" = "#CC79A7"
     )
   ) +
   scale_linetype_manual(
@@ -396,7 +405,7 @@ ggplot(
       "Total population" = "dotted",
       "Wild type" = "solid",
       "Resistant" = "solid",
-      "lysogenic" = "solid",
+      "Lysogenic" = "solid",
       "Phages" = "solid"
     )
   ) +
@@ -405,7 +414,7 @@ ggplot(
       "Total population" = 0.7,
       "Wild type" = 1,
       "Resistant" = 1,
-      "lysogenic" = 1,
+      "Lysogenic" = 1,
       "Phages" = 1
     )
   ) +
@@ -416,7 +425,7 @@ ggplot(
     linetype = NULL,
     alpha = NULL
   ) +
-  ggtitle("Evolutionary rescue with resistant and lysogenic bacteria") +
+  ggtitle("Evolutionary rescue no survival strategy") +
   theme_classic() +
   theme(
     legend.position = "right",
@@ -425,7 +434,9 @@ ggplot(
   )
 
 ``` 
+
 ```{r No resistance}
+# simulation and plotting with only one survival strategy: lysogeny (no resistance)
 
 max_gen <- 2000
 N_init_wt <- 100
@@ -456,12 +467,6 @@ print(tail(output))
 # determine x axis range 
 x_range <- 0:(length(output[,1])-1)
 
-# plotting with ggplot
-library(ggplot2)
-library(tidyr)
-library(dplyr)
-library(tibble)
-
 # Convert simulation output into a data frame
 output_df <- as.data.frame(output) %>%
   mutate(Generation = as.numeric(rownames(output))) %>%
@@ -482,7 +487,7 @@ plot_data <- output_df %>%
         "Total population",
         "Wild type",
         "Resistant",
-        "lysogenic",
+        "Lysogenic",
         "Phages"
       )
     )
@@ -500,14 +505,14 @@ ggplot(
     alpha = Population
   )
 ) +
-  geom_line(linewidth = 0.4) +
+ geom_line(linewidth = 0.4) +
   scale_colour_manual(
     values = c(
       "Total population" = "black",
-      "Wild type" = "blue",
-      "Resistant" = "red",
-      "lysogenic" = "green",
-      "Phages" = "orange"
+      "Wild type" = "#E69F00",
+      "Resistant" = "#0072B2",
+      "Lysogenic" = "#009E73",
+      "Phages" = "#CC79A7"
     )
   ) +
   scale_linetype_manual(
@@ -515,7 +520,7 @@ ggplot(
       "Total population" = "dotted",
       "Wild type" = "solid",
       "Resistant" = "solid",
-      "lysogenic" = "solid",
+      "Lysogenic" = "solid",
       "Phages" = "solid"
     )
   ) +
@@ -524,7 +529,7 @@ ggplot(
       "Total population" = 0.7,
       "Wild type" = 1,
       "Resistant" = 1,
-      "lysogenic" = 1,
+      "Lysogenic" = 1,
       "Phages" = 1
     )
   ) +
@@ -535,7 +540,7 @@ ggplot(
     linetype = NULL,
     alpha = NULL
   ) +
-  ggtitle("Evolutionary rescue with resistant and lysogenic bacteria") +
+  ggtitle("Evolutionary rescue with only lysogenic bacteria") +
   theme_classic() +
   theme(
     legend.position = "right",
@@ -543,7 +548,10 @@ ggplot(
     legend.background = element_blank()
   )
 ```
+
 ```{r No lysogeny}
+# simulation and plotting with only one survival strategy: resistance (no lysogeny)
+
 
 max_gen <- 2000
 
@@ -574,11 +582,6 @@ print(tail(output))
 # determine x axis range 
 x_range <- 0:(length(output[,1])-1)
 
-# plotting with ggplot
-library(ggplot2)
-library(tidyr)
-library(dplyr)
-library(tibble)
 
 # Convert simulation output into a data frame
 output_df <- as.data.frame(output) %>%
@@ -600,7 +603,7 @@ plot_data <- output_df %>%
         "Total population",
         "Wild type",
         "Resistant",
-        "lysogenic",
+        "Lysogenic",
         "Phages"
       )
     )
@@ -622,10 +625,10 @@ ggplot(
   scale_colour_manual(
     values = c(
       "Total population" = "black",
-      "Wild type" = "blue",
-      "Resistant" = "red",
-      "lysogenic" = "green",
-      "Phages" = "orange"
+      "Wild type" = "#E69F00",
+      "Resistant" = "#0072B2",
+      "Lysogenic" = "#009E73",
+      "Phages" = "#CC79A7"
     )
   ) +
   scale_linetype_manual(
@@ -633,7 +636,7 @@ ggplot(
       "Total population" = "dotted",
       "Wild type" = "solid",
       "Resistant" = "solid",
-      "lysogenic" = "solid",
+      "Lysogenic" = "solid",
       "Phages" = "solid"
     )
   ) +
@@ -642,7 +645,7 @@ ggplot(
       "Total population" = 0.7,
       "Wild type" = 1,
       "Resistant" = 1,
-      "lysogenic" = 1,
+      "Lysogenic" = 1,
       "Phages" = 1
     )
   ) +
@@ -653,7 +656,7 @@ ggplot(
     linetype = NULL,
     alpha = NULL
   ) +
-  ggtitle("Evolutionary rescue with resistant and lysogenic bacteria") +
+  ggtitle("Evolutionary rescue with only resistant bacteria") +
   theme_classic() +
   theme(
     legend.position = "right",
@@ -694,11 +697,11 @@ P_decline <- -0.5
 P_prod <- 1.5
 
 # determine how often to run the simulation for each set of parameters
-no_replicates <- 100
+no_replicates <- 2
 
 # set parameters to vary
 induction_prob = 0.07
-cost_r = seq(0.05, 0.1, by = 0.01)
+cost_r = seq(0.05, 0.1, by = 0.5)
 
 # initialize data table - where to collect the results
  data_table <- c()
@@ -715,7 +718,8 @@ cost_r = seq(0.05, 0.1, by = 0.01)
     repeat {
       # increase counter by one
       i<-i+1
-      #set.seed(i)
+      # set seed inside loop to recreate single trajectories. for debugging/checking only
+      #set.seed(i) 
       seed = i
       # run the simulation once with changing parameter
       one_run <- simulate_pop(N_init_wt, N_init_r, N_init_l, N_init_p, infection_prob, induction_prob, lysogen_prob, mut_rate, cval, growth_rate, max_gen, K, P_decline, P_prod)
@@ -762,8 +766,18 @@ for (i in seq_len(nrow(outcomes))) {
 
 print(head(outcomes))
 
+# save data with today's date. any data generated on the same date will overwrite this file
+write.csv(outcomes, paste(your_pathname, "/data/cost_r_iterations", Sys.Date(), ".csv", sep = ""))
+```
 
-## plot outcomes
+
+```{r cost_r iterations plots}
+## plot outcomes of cost_r iterations
+
+# get data
+# if you want to access data from an earlier simulation, set the date to the day it was created (format YYY-MM-DD)
+date = Sys.Date()
+outcomes = read.csv(paste(your_pathname,"/data/cost_r_iterations", date, ".csv", sep ="" ))
 
 # treat cost_r as a categorical axis (only three values)
 outcomes$cost_r <- factor(outcomes$cost_r)
@@ -827,7 +841,8 @@ cost_r = 0.07
     repeat {
       # increase counter by one
       i<-i+1
-      #set.seed(i)
+       # set seed inside loop to recreate single trajectories. for debugging/checking only
+      #set.seed(i) 
       seed = i
       # run the simulation once with changing parameter
       one_run <- simulate_pop(N_init_wt, N_init_r, N_init_l, N_init_p, infection_prob, ival, lysogen_prob, mut_rate, cost_r, growth_rate, max_gen, K, P_decline, P_prod)
@@ -874,10 +889,20 @@ for (i in seq_len(nrow(outcomes))) {
 
 print(head(outcomes))
 
+# save data with today's date. any data generated on the same date will overwrite this file
+write.csv(outcomes, paste(your_pathname, "/data/induction_prob_iterations", Sys.Date(), ".csv", sep = ""))
+```
 
-## plot outcomes
 
-# treat cost_r as a categorical axis (only three values)
+```{r induction_prob iterations plots}
+## plot outcomes of induction_prob iterations
+
+# get data
+# if you want to access data from an earlier simulation, set the date to the day it was created (format YYY-MM-DD)
+date = Sys.Date()
+outcomes = read.csv(paste(your_pathname,"/data/induction_prob_iterations", date, ".csv", sep ="" ))
+
+# treat induction_prob as a categorical axis (only three values)
 outcomes$induction_prob <- factor(outcomes$induction_prob)
 
 # fix the order of the five outcomes so colours are consistent
@@ -892,15 +917,13 @@ ggplot(outcomes, aes(x = induction_prob, fill = outcome)) +
                                "wt wins"     = "#E69F00",
                                "r wins"      = "#0072B2",
                                "l wins"      = "#009E73",
-                               "temporary coexistence" = "#CC79A7"),
+                               "temporary coexistence" = "#F0E442"),
                     drop = FALSE) +
   labs(x = "Induction probability (induction_prob)", y = "Proportion of replicates", fill = "Outcome") +
   theme_minimal() +
-  ggtitle("Outcome proportion with different induction_prob")
+  ggtitle("Outcome proportions with different induction_prob")
 
 ```
-
-
 
 
 
@@ -945,7 +968,8 @@ cost_r = seq(0.05, 0.95, by = 0.3)
     repeat {
       # increase counter by one
       i<-i+1
-      #set.seed(i) # to be able to go back to that exact simulation
+      # set seed inside loop to recreate single trajectories. for debugging/checking only
+      #set.seed(i) 
       seed = i
       # run the simulation once with changing parameter
       one_run <- simulate_pop(N_init_wt, N_init_r, N_init_l, N_init_p, infection_prob, ival, lysogen_prob, mut_rate, cval, growth_rate, max_gen, K, P_decline, P_prod)
@@ -993,17 +1017,16 @@ for (i in seq_len(nrow(outcomes))) {
 print(head(outcomes))
 print(tail(outcomes))
 
-# save preliminary data for plotting (seed =10)
-# write.csv(outcomes, "/Users/macbookair/Library/CloudStorage/OneDrive-Personal/THEE prakti/THEE Coevolution/data/trial_outcomes.csv")
-
-
+# save data with today's date. any data generated on the same date will overwrite this file
+write.csv(outcomes, paste(your_pathname, "/data/combined_r_l_data", Sys.Date(), ".csv", sep = ""))
 ```
 
 ```{r heat maps}
-# outcomes = read.csv("/Users/aylin/Documents/GitHub/THEE-Coevolution-HGT/data/trial_outcomes.csv")
-
-library(ggplot2)
-library(dplyr)
+# get data
+# get data
+# if you want to access data from an earlier simulation, set the date to the day it was created (format YYY-MM-DD) 
+date = Sys.Date()
+outcomes = read.csv(paste(your_pathname, "/data/combined_r_l_data", date, ".csv", sep = ""))
 
 ## plot outcomes
 
@@ -1027,7 +1050,7 @@ ext <- outcomes %>%
 ggplot(ext, aes(x = cost_r, y = induction_prob, fill = p_ext)) +
   geom_tile(colour = "white", linewidth = 0.8) +
   geom_text(aes(label = sprintf("%.2f", p_ext)), size = 4) +
-  scale_fill_gradient(low = "white", high = "#B22222",
+  scale_fill_gradient(low = "white", high = "#D55E00",
                       limits = c(0, 1), name = "P(extinction)") +
   labs(x = "Cost of resistance (cost_r)",
        y = "Induction probability (induction_prob)") +
@@ -1094,21 +1117,26 @@ ggplot(res, aes(x = cost_r, y = induction_prob, fill = p_res)) +
   theme_minimal() +
   ggtitle("Probability of resistance")
 
-
-
-
 ```
 
 
-## Limitations/Thoughts
+## Conclusions/Limitations/Thoughts
 - start with 1 phage. not so realistic, also if want to test effect of phage therapy varying this could be a thing
 - also phage production is very low
+- outcome is dependent on K: if K is lower, l is a more likely outcome. would be interesting to analyze this but no time. 
+- due to interaction with phage population, the lysogen generation becomes deterministic instead of stochastic (like the resistant generation). it is boosted by phages. above a threshold of around 0.5 induction probabilty, the lysogen population abruptly looses its advantage as the fitness cost is too high, the population cannot be sustained.
+
+## Author contributions
+- 
 
 ## AI use
 AI was used on the R code for
 - debugging
 - implementing concepts in the base code (carrying capacity)
 - plots
+
+## Supplementary figures
+
 
 
 
