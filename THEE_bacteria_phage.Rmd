@@ -1,69 +1,43 @@
 ---
 
-title: "Bacteria Evolutionary Rescue: Resistance or Lysogen"
+title: "Resistance vs. lysogeny: bacterial defense against temperate phages under phage therapy"
 author: "Aylin & Marika"
 date: "2026-10-15"
 output:
   html_document:
     df_print: paged
 ---
+## Abstract
 
-## Simulating evolutionary rescue in discrete time
 
-In this notebook, we are implementing simulations of evolutionary rescue in a bacterial population under phage pressure. The model is based on a single-mutation, discrete-time framework, which we extended by a phage population and a second rescue strategy. The model is as follows: a haploid bacterial population starts with a given number of wild-type (wt) bacteria and together with a population of free phages. Because of the phages, the wild-type is unfit: in each generation wt bacteria are killed by phage infection and the more phages there are, the higher the death rate of the wild-type.
+## Simulating evolutionary rescue under phage therapy
+
+In this notebook, we are implementing simulations of evolutionary rescue in a bacterial population under phage pressure. The model is based on a single-mutation, discrete-time framework (Bank 2026, Orr 2008) extended by a phage population and a second rescue strategy. This model can be thought of as a simulation of phage therapy. Phage therapy has recently gained renewed interest as an alternative therapy to antibiotics, which is limited by the spread of antibiotic resistances. A major challenge for phage therapy is the adaptation of the pathogenic bacteria to the phages. Adaptation can be very fast and varied (Karamlou 2025). For this model, phage therapy is understood as a sudden addition of phages to a wild-type bacteria population. Two adaptation strategies with different costs can potentially rescue the bacterial population, i.e., render the phage therapy unsuccessful.
+
+### Model overview: strategies and outcomes
+
+The model is as follows: a haploid bacterial population starts with a given number of wild-type (wt) bacteria and a fixed growth rate together with a population of free phages. Because of the phages, the wild-type is unfit: in each generation wt bacteria are killed by phage infection and the more phages there are, the higher the death rate of the wild-type.
 The following are the two possible survival strategies that the bacteria population have:
 
-1. Resistance (slow but safe): wt offspring have a resistance mutation at a low rate (mut_rate). Resistant bacteria are immune to the phages and are not killed by infection. Resistance is permanent, but it comes with a fitness cost (cost_r) that reduces their offspring number. This strategy is phage-independent. 
+1. Resistance (slow but safe): wt offspring have a resistance mutation at a low rate (`mut_rate`). Resistant bacteria are immune to the phages and are not killed by infection. Resistance is permanent, but it comes with a fitness cost (`cost_r`) that reduces their offspring number. This strategy is phage-independent. 
 
-2. Lysogen (fast but risky): wt bacteria can enter a lysogen relationship with the phage (lysogen_prob) and this becomes more likely the more phages are present. Lysogenic bacteria carry a dormant phage and therefore don't die from infection. However, they can later be killed when their own phage is induced (induction_prob), which releases new phages into the environment. This strategy is phage-dependent.
+2. Lysogen (fast but risky): wt bacteria can enter a lysogenic relationship with the phage (`lysogen_prob`), which becomes more likely the more phages are present. Lysogenic bacteria carry a dormant phage and therefore cannot die from infection. However, they can later be killed by induction of the dormant phage (`induction_prob`), which releases new phages into the environment. This strategy is phage-dependent.
 
-So the following are the four possible outcomes of our model:
-1.Extinction
-2.Only lysogen persists
-3.Only resistance persists
-(4.Coexistence occurs --> not possible in our model)
-(5.Only wt persists -> not possible)
+Figure 1 shows a schematic of one generation. Not depicted are the rates and probabilities leading to each new population (i.e., `growth_rate`, `mut_rate`, `cost_r`, `induction_prob` etc.). 
 
+![Model Figure](Model_Figure.png)
+*Figure 1: Life cycle of one generation in the model*
 
-All bacterial types grow with a shared carrying capacity (K) and the phage population is updated each generation from phage decline (P_decline) and from phage production at infection and induction events (P_prod). Resistant and lysogenic bacteria start at a population number of 0, so they have to arise from wt bacteria through mutations or integration (becoming a lysogen) and then spread before the bacterial population goes extinct. Rescue means that the bacterial population recovers and persists, so the central question is which strategy (resistance or lysogen) rescues the population and under which conditions.
+All bacterial types grow with a shared carrying capacity (`K`) and the phage population is updated each generation from phage decline (`P_decline`) and from phage production at infection and induction events (`P_prod`). Resistant and lysogenic bacteria start at a population number of 0, so they have to arise from wt bacteria through mutations or integration (i.e., becoming a lysogen) and then spread before the total bacterial population goes extinct. Rescue means that the bacterial population (be it wt, resistant or lysogen) recovers and persists. 
 
+The following are the three possible outcomes of our model:
+1. Extinction
+2. Only lysogen persists
+3. Only resistance persists
 
-## Idea of model:
-This model can be thought of as a simulation of phage therapy. Phage therapy has recently gained interest as an alternative therapy to antibiotics, which is limited by the spread of antibiotic resistances. A major challenge for phage therapy is the fast adaptation of the pathogenic bacteria to the phages (Karamlou 2025). 
-
-The lysogen strategy is fast but risky. Every wt cell can become a lysogen right away, but they can later be killed by induction.
-Resistance is slow but safe. It needs a rare mutation and has a growth cost, but it is permanent.
-Which strategy is the most successful?
+The central questions are a) whether the population is rescued and b) which strategy is more successful under which conditions.
 
 ## List of variables and parameters
-
-**Variables:**
-
-- $N_wt$ current size of the wild-type bacteria population (changes over time)
-- $N_r$ current size of the resistant bacteria population (changes over time)
-- $N_l$ current size of the lysogenic bacteria population (changes over time)
-- $N_P$ current size of the Phage population (changes over time)
-
-**Parameters:**
-
-- `N_init_wt` initial population size of wild-type population (should be a positive integer). Fixed to 100
-- `N_init_r` initial population size of the mutant resistant population (should be a non-negative integer). Fixed to 0
-- `N_init_l` initial population size of the lysogenic population (should be a non-negative integer). Fixed to 0
-- `N_init_P` initial population size of the phage population (should be a positive integer). Fixed to 1
-- `growth_rate` average number of offspring per bacterium (wt, r and l) per generation (should be non-negative). Fixed to 1.5
-- `lysogen_prob` probability that wt bacterium becomes lysogenic (range 0-1), should be bigger than mutation rate. Fixed to 0.002
-- `mut_rate` probability that an offspring of wt bacterium mutates to resistant. Fixed to 0.002
-- `infection_prob` probability that wt bacterium is infected by a phage per generation (range 0-1). Fixed to 0.01
-- `K` carrying capacity of the total bacteria population (wt + r + l) (positive integer). Fixed to 2000
-- `P_decline` fraction of phages decaying every generation (non-positive). Fixed to -0.5
-- `P_prod` number of new phages produced from an infection or induction (non-negative). Fixed to 1.5
-- `t_max` number of generations after which to stop the simulation (should be an integer > 0; this is not a model parameter but a setting for the simulations). In the code presented here, the simulation stops automatically if the population goes extinct or when reaching t_max. Fixed to 2000
-
-**Variable parameters for analysis:**
-
-- `induction_prob` probability (per generation) that a lysogenic bacterium is killed by its own dormant phage (range 0-1).
-- `cost_r` fraction of offspring that resistant bacteria lose compared to wt (i.e., fitness cost of resistance) (range 0-1).
-
 
 | Name | Type | Description | Allowed range | Value |
 |:-----|:-----|:------------|:--------------|:------|
@@ -675,7 +649,8 @@ ggplot(
 
 ```
 
-## Analysis
+## Analysis of outcomes
+### Effects of induction_prob and cost_r
 Here, we analyze the effects of varying induction probability (~ lysogen death rate) and the cost of r (~ resistant death rate) on three possible outcomes:
 
 1. Extinction: the total bacterial population (wt + r + l) goes extinct
@@ -684,9 +659,9 @@ Here, we analyze the effects of varying induction probability (~ lysogen death r
 
 Coexistence is a category in our analysis when neither l or r have gone extinct by the end of the simulation (after `t_max`generations). Running these cases with longer `t_max`showed that there is in fact no equilibrium between r and l but one of the two was declining and had not yet reached a population size of 0 by the end of the simulation. This case is termed "temporary coexistence". 
 
-The proportion of outcomes is plotted as barplots (for varying induction probabilty and cost of r, respectively) and as a heat map for combinations of each.
+The proportion of outcomes is plotted as barplots (for varying induction probabilty and cost of r, respectively).
 
-```{r cost_r iterations}
+```{r cost_r iterations, echo = F}
 # set some parameters to fixed values
 # set t_max to a value to be used throughout
 max_gen <- 2000
@@ -778,7 +753,7 @@ write.csv(outcomes, paste(your_pathname, "/data/cost_r_iterations", Sys.Date(), 
 ```
 
 
-```{r cost_r iterations plots}
+```{r cost_r iterations plots, echo = F}
 ## plot outcomes of cost_r iterations
 
 # get data
@@ -809,7 +784,7 @@ ggplot(outcomes, aes(x = cost_r, fill = outcome)) +
 ```
 
 
-```{r induction_prob iterations}
+```{r induction_prob iterations, echo = F}
 # set some parameters to fixed values
 # set t_max to a value to be used throughout
 max_gen <- 2000
@@ -901,7 +876,7 @@ write.csv(outcomes, paste(your_pathname, "/data/induction_prob_iterations", Sys.
 ```
 
 
-```{r induction_prob iterations plots}
+```{r induction_prob iterations plots, echo = F}
 ## plot outcomes of induction_prob iterations
 
 # get data
@@ -935,7 +910,7 @@ ggplot(outcomes, aes(x = induction_prob, fill = outcome)) +
 ### Combined effect of induction_prob and cost_r
 Here we vary induction probability (~lysogen death rate) and the cost of resistance (~ resistant death rate) at the same time, in a full grid of all combinations. For each combination, the simulation is repeated many times (`no_replicates`) and the population sizes at the final generation are recorded. Each replicate is then assigned one of the five outcomes (extinction, wt wins, r wins, l wins, temporary coexistence). The table is saved as a csv file so that the heat maps below can be recreated without re-running the (slow) simulations.
 
-```{r cost_r and induction_prob}
+```{r cost_r and induction_prob, echo = F}
 # set some parameters to fixed values
 # set t_max to a value to be used throughout
 max_gen <- 2000
@@ -1037,8 +1012,7 @@ The saved data from the grid simulation above is read in and for each combinatio
 3. Probability that lysogens (l) win
 4. Probability that resistant bacteria (r) win
 
-```{r heat maps}
-# get data
+```{r heat maps, echo = F}
 # get data
 # if you want to access data from an earlier simulation, set the date to the day it was created (format YYY-MM-DD) 
 date = Sys.Date()
@@ -1046,7 +1020,7 @@ outcomes = read.csv(paste(your_pathname, "/data/combined_r_l_data", date, ".csv"
 
 ## plot outcomes
 
-# treat parameters as a categorical axis (only three values)
+# treat parameters as a categorical axis
 outcomes$induction_prob <- factor(outcomes$induction_prob)
 outcomes$cost_r = factor(outcomes$cost_r)
 
@@ -1137,18 +1111,22 @@ ggplot(res, aes(x = cost_r, y = induction_prob, fill = p_res)) +
 
 
 ## Conclusions/Limitations/Thoughts
-- start with 1 phage. not so realistic, also if want to test effect of phage therapy varying this could be a thing
+- start with 1 phage. not so realistic, also if want to test effect of phage therapy varying this could be a thing --> as outlook!
 - also phage production is very low
 - outcome is dependent on K: if K is lower, l is a more likely outcome. would be interesting to analyze this but no time. 
 - due to interaction with phage population, the lysogen generation becomes deterministic instead of stochastic (like the resistant generation). it is boosted by phages. above a threshold of around 0.5 induction probabilty, the lysogen population abruptly looses its advantage as the fitness cost is too high, the population cannot be sustained.
+- mention that outcomes "wt persists" and "coexistence" are not possible for our model.
+- Alexander et al. (2014) highlight the importance of applying evolutionary rescue theories used in conservation in medicine as well, as the dynamics are very similar. 
+- value/importance 
 
 ## References
 Alexander HK et al. (2014) Evolutionary rescue: linking theory for conservation and medicine. *Evolutionary Applications* 7: 1161-79. DOI: https://doi.org/10.1111/eva.12221
 
+Bank C (2026) Course material: basic evolutionary rescue notebook
+
 Karamlou S et al. (2025) Bacterial resistance to phage therapy: Mechanisms and strategies to overcome it. *Current Molecular Pharmacology* 18: 108-122. DOI: https://doi.org/10.1016/j.cmp.2025.11.003
 
-Orr HA, Unckless RL (2014) The Population Genetics of Evolutionary Rescue. . *PLoS Genet* 10(8): e1004551. DOI:10.1371/journal.pgen.1004551
-
+Orr HA, Unckless RL (2008) Population Extinction and the Genetics of Adaptation. *The American Naturalist* 172(2). DOI:https://doi.org/10.1086/589460
 
 ## Author contributions
 - 
