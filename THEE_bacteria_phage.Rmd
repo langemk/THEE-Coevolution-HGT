@@ -12,7 +12,7 @@ output:
 
 ## Simulating evolutionary rescue under phage therapy
 
-In this notebook, we are implementing simulations of evolutionary rescue in a bacterial population under phage pressure. The model is based on a single-mutation, discrete-time framework (Bank 2026, Orr 2008) extended by a phage population and a second rescue strategy. This model can be thought of as a simulation of phage therapy. Phage therapy has recently gained renewed interest as an alternative therapy to antibiotics, which is limited by the spread of antibiotic resistances. A major challenge for phage therapy is the adaptation of the pathogenic bacteria to the phages. Adaptation can be very fast and varied (Karamlou 2025). For this model, phage therapy is understood as a sudden addition of phages to a wild-type bacteria population. Two adaptation strategies with different costs can potentially rescue the bacterial population, i.e., render the phage therapy unsuccessful.
+In this notebook, we are implementing simulations of evolutionary rescue in a bacterial population under phage pressure. The model is based on a single-mutation, discrete-time framework (Bank 2026, Orr 2008) extended by a phage population and a second rescue strategy. This model can be thought of as a simulation of phage therapy. Phage therapy has recently gained renewed interest as an alternative therapy to antibiotics, which is limited by the spread of antibiotic resistances. A major limitation of phage therapy is the adaptation of the pathogenic bacteria to the phages. Adaptation can be very fast and with varied strategies (Karamlou 2025). For this model, phage therapy is understood as a sudden addition of phages to a wild-type bacteria population. As simulated here, two adaptation strategies with different costs can potentially rescue the bacterial population, i.e., render the phage therapy unsuccessful. We want to explore under which conditions the bacterial population is rescued and if so, which strategy is more successful.
 
 ### Model overview: strategies and outcomes
 
@@ -34,8 +34,6 @@ The following are the three possible outcomes of our model:
 1. Extinction
 2. Only lysogen persists
 3. Only resistance persists
-
-The central questions are a) whether the population is rescued and b) which strategy is more successful under which conditions.
 
 ## List of variables and parameters
 
@@ -1132,11 +1130,15 @@ Orr HA, Unckless RL (2008) Population Extinction and the Genetics of Adaptation.
 - 
 
 ## AI use declaration
-AI was used on the R code for
+Claude and ChatGPT were used on the R code for
 - debugging
 - implementing concepts in the base code (e.g., carrying capacity)
 - generating plots
 - RMarkdown layout
+Furthermore, Claude was used to determine useful parameter ranges.
+
+For debugging and implementing concepts, suggestions from Claude and ChatGPT were not copied as a whole but selective changes were manually made in the code to ensure no unknown changes happened. 
+For visuals (plots and layout), whole code blocks were copied. The outputs were checked visually (i.e., whether they generated what we imagined). 
 
 ## Supplementary figures
 

@@ -21,6 +21,7 @@ The model asks how the two strategies perform under different conditions and whe
 project/
 ├── README.md                  this file
 └── THEE_bacteria_phage.Rmd    main notebook (model, simulations, plots)
+└── data                       folder with data generated for analysis                      
 ```
 
 | Piece | What it does |
@@ -29,6 +30,21 @@ project/
 | `simulate_pop()` | Repeats `simulate_one_gen()` until extinction or `t_max` and returns population sizes per generation |
 | Plot chunk | Plots wild type, resistant, lysogens, phages and total population (ggplot2) |
 | Analysis chunk | Runs many replicates over a parameter range and summarizes the outcome |
+
+## Requirements 
+- R and RStudio
+- R packages: "ggplot2", "tidyr", "dplyr", "tibble"
+
+```r
+install.packages(c("ggplot2", "tidyr", "dplyr", "tibble"))
+```
+
+## How to run
+1. Open "THEE_bacteria_phage.Rmd" in RStudio.
+2. Run the chunks from top to bottom, or click "Knit" for an HTML report.
+3. Change the parameters in the "population trajectory" chunk to explore other scenarios. 
+4. Change the parameters in the "iterations" chunks to analyze simulation outcomes under different conditions.
+The analysis chunk runs many replicates and can be slow.
 
 ## Model overview: strategies and outcomes
 
@@ -72,21 +88,6 @@ The following are the three possible outcomes of our model:
 | `t_max` | Simulation setting | Number of generations after which the simulation stops (not a model parameter). The simulation also stops automatically if the bacterial population goes extinct | integer > 0 | 2000 |
 | `induction_prob` | Varied parameter | Probability (per generation) that a lysogenic bacterium is killed by its own dormant phage | 0 to 1 | varied in the analysis |
 | `cost_r` | Varied parameter | Fraction of offspring that resistant bacteria lose compared to wt (fitness cost of resistance) | 0 to 1 | varied in the analysis |
-
-## Requirements 
-- R and RStudio
-- R packages: "ggplot2", "tidyr", "dplyr", "tibble"
-
-```r
-install.packages(c("ggplot2", "tidyr", "dplyr", "tibble"))
-```
-
-## How to run
-1. Open "THEE_bacteria_phage.Rmd" in RStudio.
-2. Run the chunks from top to bottom, or click "Knit" for an HTML report.
-3. Change the parameters in the "population trajectory" chunk to explore other scenarios. 
-4. Change the parameters in the "iterations" chunks to analyze simulation outcomes under different conditions.
-The analysis chunk runs many replicates and can be slow.
 
 ## References
 Alexander HK et al. (2014) Evolutionary rescue: linking theory for conservation and medicine. *Evolutionary Applications* 7: 1161-79. DOI:https://doi.org/10.1111/eva.12221
