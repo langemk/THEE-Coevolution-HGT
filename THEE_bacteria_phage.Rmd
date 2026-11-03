@@ -68,7 +68,8 @@ library(dplyr)
 library(tibble)
 
 # change this to where you have saved the repository
-your_pathname = "/Users/macbookair/Library/CloudStorage/OneDrive-Personal/THEE prakti/THEE Coevolution"
+#your_pathname = "/Users/macbookair/Library/CloudStorage/OneDrive-Personal/THEE prakti/THEE Coevolution"
+your_pathname = "/Users/aylin/Documents/GitHub/THEE-Coevolution-HGT"
 
 ```
 
