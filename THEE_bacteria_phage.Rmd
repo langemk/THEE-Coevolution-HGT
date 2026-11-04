@@ -8,7 +8,7 @@ output:
     df_print: paged
 ---
 ## Abstract
-
+When bacteria face lethal phage pressure, two strategies can rescue a population: resistance, which is slow, costly and permanent, and lysogeny, which is immediate but can be lost when the dormant phage is induced. Which strategy succeeds, and when? Using a stochastic simulation model that includes phage dynamics, we varied the cost of resistance and the induction probability and recorded how often each simulation ended in extinction, wild-type persistence, resistant or lysogenic dominance, or temporary coexistence. 
 
 ## Simulating evolutionary rescue under phage therapy
 
