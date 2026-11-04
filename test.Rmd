@@ -39,7 +39,7 @@ The following are the two possible survival strategies that the bacteria populat
 Figure 1 shows a schematic of one generation. Not depicted are the rates and probabilities leading to each new population (i.e., `growth_rate`, `mut_rate`, `cost_r`, `induction_prob` etc.). 
 
 ![Model Figure](Model_Figure.png)
-*Figure 1: Life cycle of one generation in the model*
+*Figure 1: Life cycle of one generation in the model with `cst`*
 
 All bacterial types grow with a shared carrying capacity (`K`) and the phage population is updated each generation from phage decline (`P_decline`) and from phage production at infection and induction events (`P_prod`). Resistant and lysogenic bacteria start at a population number of 0, so they have to arise from wt bacteria through mutations or integration (i.e., becoming a lysogen) and then spread before the total bacterial population goes extinct. Rescue means that the bacterial population (be it wt, resistant or lysogen) recovers and persists. 
 

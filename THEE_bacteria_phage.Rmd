@@ -23,10 +23,10 @@ The following are the two possible survival strategies that the bacteria populat
 
 2. Lysogen (fast but risky): wt bacteria can enter a lysogenic relationship with the phage (`lysogen_prob`), which becomes more likely the more phages are present. Lysogenic bacteria carry a dormant phage and therefore cannot die from infection. However, they can later be killed by induction of the dormant phage (`induction_prob`), which releases new phages into the environment. This strategy is phage-dependent.
 
-Figure 1 shows a schematic of one generation. Not depicted are the rates and probabilities leading to each new population (i.e., `growth_rate`, `mut_rate`, `cost_r`, `induction_prob` etc.). 
+Figure 1 shows a schematic of one generation. Not depicted are the rates and probabilities leading to each new population (i.e., `growth_rate`, `mut_rate`, `cost_r`, `lysogen_prob`, `induction_prob`, `infection_prob`, `P_decline`, `P_prod`). 
 
 ![Model Figure](Model_Figure.png)
-*Figure 1: Life cycle of one generation in the model*
+*Figure 1: Life cycle of one generation in the model (from generation t to generation t+1)*
 
 All bacterial types grow with a shared carrying capacity (`K`) and the phage population is updated each generation from phage decline (`P_decline`) and from phage production at infection and induction events (`P_prod`). Resistant and lysogenic bacteria start at a population number of 0, so they have to arise from wt bacteria through mutations or integration (i.e., becoming a lysogen) and then spread before the total bacterial population goes extinct. Rescue means that the bacterial population (be it wt, resistant or lysogen) recovers and persists. 
 
@@ -75,7 +75,7 @@ your_pathname = "/Users/macbookair/Library/CloudStorage/OneDrive-Personal/THEE p
 
 
 ## Simulate one generation of population size change
-We want to follow the numbers of wild-type, resistant and lysogenic bacteria over time, as well as the phage population. As a first step, we simulate a single generation. At time $t$, the population consists of $N_{wt}$ wild-type bacteria, $N_r$ resistant bacteria, $N_l$ lysogens and $N_p$ phages. One generation consists of three steps:
+We want to follow the numbers of wild-type, resistant and lysogenic bacteria over time, as well as the phage population. As a first step, we simulate a single generation. At generation $t$, the population consists of $N_{wt}$ wild-type bacteria, $N_r$ resistant bacteria, $N_l$ lysogens and $N_p$ phages. One generation consists of three steps:
 
 1. **Expected offspring.** Each bacterial type has its own net growth rate, which is the intrinsic growth rate minus a type-specific loss. For wild-type bacteria the loss is the infection probability multiplied by the number of phages, so the more phages there are, the higher the death rate. For resistant bacteria the loss is the cost of resistance (`cost_r`), and for lysogens it is the induction probability (`induction_prob`). Crowding, set by the carrying capacity $K$, reduces the growth of all three types by the same amount. The number of offspring of each type is then drawn from a Poisson distribution around its expected value.
 
@@ -83,7 +83,7 @@ We want to follow the numbers of wild-type, resistant and lysogenic bacteria ove
 
 3. **Phage dynamics.** The phage population declines by a fixed fraction (`P_decline`) and gains `P_prod` new phages for each infection of a wild-type bacterium and each induction of a lysogen.
 
-The result of these steps gives the sizes of all bacterial populations and of the phage population at time $t+1$.
+The result of these steps gives the sizes of all bacterial populations and of the phage population at generation $t+1$.
 
 
 ```{r One generation}
@@ -186,7 +186,7 @@ simulate_pop <- function(N_init_wt, N_init_r, N_init_l, N_init_p, infection_prob
 
 
 ## Results: Effects of varying induction_prob and cost_r on outcomes
-
+We want to analyze the effect of varying parameters on possible outcomes of the simulation.
 ### Combined effect of induction_prob and cost_r
 Here we vary induction probability (~lysogen death rate, `induction_prob`) and the cost of resistance (~ resistant death rate, `cost_r`) at the same time, in a full grid of all combinations. The model parameters are set as defined in the model overview. `cost_r`and `induction_prob` range from 0.05 to 0.95 in steps of 0.3 For each combination, the simulation is repeated many times (`no_replicates`) and the population sizes at the final generation are recorded. Each replicate is then assigned one of five outcomes:
 
@@ -221,8 +221,8 @@ P_prod <- 1.5
 no_replicates <- 100
 
 # set parameters to vary
-induction_prob = seq(0.05, 0.95, by = 0.3)
-cost_r = seq(0.05, 0.95, by = 0.3)
+induction_prob = seq(0.05, 0.95, by = 0.15) # original: by = 0.3
+cost_r = seq(0.05, 0.95, by = 0.15) # original: by = 0.3
 
 # initialize data table - where to collect the results
  data_table <- c()
@@ -304,7 +304,7 @@ The saved data from the grid simulation above is read in and for each combinatio
 
 ```{r heat maps prep, echo = F}
 # get data
-# if you want to access data from an earlier simulation, set the date to the day it was created (format YYYY-MM-DD) 
+# if you want to access data from an earlier simulation, set the date to the day it was created (format YYYY-MM-DD), otherwise use Sys.date()
 date = Sys.Date()
 outcomes = read.csv(paste(your_pathname, "/data/combined_r_l_data", date, ".csv", sep = ""))
 
@@ -451,7 +451,7 @@ Here we plot population trajectories with 1) both strategies, 2) no strategies, 
 # simulation and plotting of complete model
 # set t_max to a value to be used throughout
 
-max_gen <- 2000
+max_gen <- 500
 
 N_init_wt <- 100
 N_init_r <- 0
@@ -466,7 +466,7 @@ P_decline <- -0.5
 P_prod <- 1.5
 
 # set parameters to vary
-induction_prob = 0.35
+induction_prob = 0.48
 cost_r = 0.35
 
 
@@ -563,7 +563,7 @@ ggplot(
   )
 
 ```
-*Supplementary Figure 1: Population trajectories with resistant and lysogen strategies with model parameters (see model overview) and `induction_prob` = 0.35 and `cost_r`= 0.35*
+*Supplementary Figure 1: Population trajectories with resistant and lysogen strategies with set model parameters (see model overview), `induction_prob` = 0.48 and `cost_r`= 0.35. `K` = 500 for better resolution.*
 
 ```{r No survival strategy, echo = F}
 # simulation and plotting of model without resistance or lysogens
@@ -680,7 +680,7 @@ ggplot(
   )
 
 ``` 
-*Supplementary Figure 2: Population trajectories with no survival strategies with model parameters (see model overview) and `lysogen_prob` = 0 and `mut_rate = 0`*
+*Supplementary Figure 2: Population trajectories with no survival strategies with set model parameters (see model overview) and `lysogen_prob` = 0 and `mut_rate = 0`*
 
 
 ```{r No resistance, echo =F}
@@ -796,7 +796,7 @@ ggplot(
     legend.background = element_blank()
   )
 ```
-*Supplementary Figure 3: Population trajectories with only lysogenic strategy with model parameters (see model overview), `lysogen_prob` = 0.002, `mut_rate` = 0 and `induction_prob` = 0.35*
+*Supplementary Figure 3: Population trajectories with only lysogenic strategy with set model parameters (see model overview), `lysogen_prob` = 0.002, `mut_rate` = 0 and `induction_prob` = 0.35*
 
 
 ```{r No lysogeny, echo =F}
@@ -915,7 +915,7 @@ ggplot(
   )
 
 ```
-*Supplementary Figure 4: Population trajectories with only resistant strategy with model parameters (see model overview), `lysogen_prob` = 0, `mut_rate` = 0.002 and `cost_r` = 0.35*
+*Supplementary Figure 4: Population trajectories with only resistant strategy with set model parameters (see model overview), `lysogen_prob` = 0, `mut_rate` = 0.002 and `cost_r` = 0.35*
 
 
 
@@ -1026,11 +1026,11 @@ write.csv(outcomes, paste(your_pathname, "/data/cost_r_iterations", Sys.Date(), 
 ## plot outcomes of cost_r iterations
 
 # get data
-# if you want to access data from an earlier simulation, set the date to the day it was created (format YYYY-MM-DD)
-date = Sys.Date()
+# if you want to access data from an earlier simulation, set the date to the day it was created (format YYYY-MM-DD), otherwise use Sys.date()
+date = "2026-11-04"
 outcomes = read.csv(paste(your_pathname, "/data/cost_r_iterations", date, ".csv", sep = ""))
 
-# treat cost_r as a categorical axis (only three values)
+# treat cost_r as a categorical axis 
 outcomes$cost_r <- factor(outcomes$cost_r)
 
 # fix the order of the five outcomes so colours are consistent
@@ -1069,7 +1069,7 @@ ggplot(props, aes(x = cost_r, y = prop, fill = outcome)) +
   theme_minimal() +
   ggtitle("Outcome proportions with different cost_r")
 ```
-*Supplementary Figure 5: *
+*Supplementary Figure 5: Barplot of outcome proportions of 100 simulation replicates with varying `cost_r`, `induction_prob`= 0.46 and set model parameters (see model overview)*
 
 ```{r induction_prob iterations, echo = F}
 # set some parameters to fixed values
@@ -1167,11 +1167,11 @@ write.csv(outcomes, paste(your_pathname, "/data/induction_prob_iterations", Sys.
 ## plot outcomes of induction_prob iterations
 
 # get data
-# if you want to access data from an earlier simulation, set the date to the day it was created (format YYYY-MM-DD)
-date = Sys.Date()
+# if you want to access data from an earlier simulation, set the date to the day it was created (format YYYY-MM-DD), otherwise use Sys.date()
+date = "2026-11-04"
 outcomes = read.csv(paste(your_pathname, "/data/induction_prob_iterations", date, ".csv", sep = ""))
 
-# treat induction_prob as a categorical axis (only three values)
+# treat induction_prob as a categorical axis
 outcomes$induction_prob <- factor(outcomes$induction_prob)
 
 # fix the order of the five outcomes so colours are consistent
@@ -1211,6 +1211,7 @@ ggplot(props, aes(x = induction_prob, y = prop, fill = outcome)) +
   ggtitle("Outcome proportions with different induction_prob")
 
 ```
+*Supplementary Figure 6: Barplot of outcome proportions of 100 simulation replicates with varying `induction_prob`, `cost_r`= 0.1 and set model parameters (see model overview)*
 
 ### Effects of varying cost_r with no lysogeny
 ```{r cost_r iterations NO L, echo = F}
@@ -1309,11 +1310,11 @@ write.csv(outcomes, paste(your_pathname, "/data/cost_r_iterations_NO_L", Sys.Dat
 ## plot outcomes of cost_r iterations (NO LYSOGENY)
 
 # get data
-# if you want to access data from an earlier simulation, set the date to the day it was created (format YYYY-MM-DD)
-date = Sys.Date()
+# if you want to access data from an earlier simulation, set the date to the day it was created (format YYYY-MM-DD), otherwise use Sys.date()
+date = "2026-11-04"
 outcomes = read.csv(paste(your_pathname, "/data/cost_r_iterations_NO_L", date, ".csv", sep = ""))
 
-# treat cost_r as a categorical axis (only three values)
+# treat cost_r as a categorical axis
 outcomes$cost_r <- factor(outcomes$cost_r)
 
 # fix the order of the five outcomes so colours are consistent
@@ -1352,6 +1353,7 @@ ggplot(props, aes(x = cost_r, y = prop, fill = outcome)) +
   theme_minimal() +
   ggtitle("Outcome proportions with different cost_r and NO LYSOGENY")
 ```
+*Supplementary Figure 6: Barplot of outcome proportions of 100 simulation replicates with varying `cost_r`, no lysogeny (`lysogen_prob` = 0) and set model parameters (see model overview)*
 
 ### Effect of varying induction_prob with no resistance
 ```{r induction_prob iterations NO R, echo = F}
@@ -1450,12 +1452,13 @@ write.csv(outcomes, paste(your_pathname, "/data/induction_prob_iterations_NO_R",
 ## plot outcomes of cost_r iterations (NO LYSOGENY)
 
 # get data
-# if you want to access data from an earlier simulation, set the date to the day it was created (format YYYY-MM-DD)
-date = Sys.Date()
-outcomes = read.csv(paste(your_pathname, "/data/cost_r_iterations_NO_R", date, ".csv", sep = ""))
+# if you want to access data from an earlier simulation, set the date to the day it was created (format YYYY-MM-DD), otherwise use Sys.date()
+date = "2026-11-04"
+outcomes = read.csv(paste(your_pathname, "/data/induction_prob_iterations_NO_R", date, ".csv", sep = ""))
 
-# treat cost_r as a categorical axis (only three values)
-outcomes$cost_r <- factor(outcomes$cost_r)
+# treat induction_prob as a categorical axis
+outcomes$induction_prob <- factor(outcomes$induction_prob)
+
 
 # fix the order of the five outcomes so colours are consistent
 outcomes$outcome <- factor(outcomes$outcome,
@@ -1467,20 +1470,20 @@ pal <- c("extinction"            = "grey50",
          "l wins"                = "#009E73",
          "temporary coexistence" = "#F0E442")
 
-# proportion of each outcome per cost_r
+# proportion of each outcome per induction_prob
 props <- outcomes %>%
-  count(cost_r, outcome, .drop = FALSE) %>%
-  group_by(cost_r) %>%
+  count(induction_prob, outcome, .drop = FALSE) %>%
+  group_by(induction_prob) %>%
   mutate(prop = n / sum(n)) %>%
   ungroup() %>%
   filter(n > 0)          # no labels for outcomes that never occur
 
 # barplot with percentage labels
-ggplot(props, aes(x = cost_r, y = prop, fill = outcome)) +
+ggplot(props, aes(x = induction_prob, y = prop, fill = outcome)) +
   geom_col(position = position_fill(reverse = TRUE)) +
   geom_text(aes(label = scales::percent(prop, accuracy = 1),
                 colour = outcome == "r wins",
-                group  = outcome),
+                group = outcome),
             position = position_fill(vjust = 0.5, reverse = TRUE),
             size = 3.5, show.legend = FALSE) +
   scale_colour_manual(values = c("TRUE" = "white", "FALSE" = "black")) +
@@ -1493,6 +1496,7 @@ ggplot(props, aes(x = cost_r, y = prop, fill = outcome)) +
   ggtitle("Outcome proportions with different induction_prob and NO RESISTANCE")
 
 ```
+*Supplementary Figure 6: Barplot of outcome proportions of 100 simulation replicates with varying `induction_prob`, no resistance (`mut_rate` = 0) and set model parameters (see model overview)*
 
 
 
