@@ -542,7 +542,7 @@ N_init_r <- 0
 N_init_l <- 0
 N_init_p <- 1
 infection_prob <- 0.01
-lysogen_prob <- 0
+lysogen_prob <- 0.002
 growth_rate <- 1.5
 mut_rate <- 0.002 
 K <- 2000
@@ -678,11 +678,11 @@ P_decline <- -0.5
 P_prod <- 1.5
 
 # determine how often to run the simulation for each set of parameters
-no_replicates <- 2
+no_replicates <- 100
 
 # set parameters to vary
-induction_prob = 0.07
-cost_r = seq(0.05, 0.1, by = 0.5)
+induction_prob = 0.46
+cost_r = seq(0.05, 0.95, by = 0.3)
 
 # initialize data table - where to collect the results
  data_table <- c()
@@ -804,8 +804,8 @@ P_prod <- 1.5
 no_replicates <- 100
 
 # set parameters to vary
-induction_prob = 0.07
-cost_r = 0.07
+induction_prob = seq(0.05, 0.95, by = 0.3)
+cost_r = 0.1
 
 # initialize data table - where to collect the results
  data_table <- c()
@@ -1116,7 +1116,8 @@ ggplot(res, aes(x = cost_r, y = induction_prob, fill = p_res)) +
 - due to interaction with phage population, the lysogen generation becomes deterministic instead of stochastic (like the resistant generation). it is boosted by phages. above a threshold of around 0.5 induction probabilty, the lysogen population abruptly looses its advantage as the fitness cost is too high, the population cannot be sustained.
 - mention that outcomes "wt persists" and "coexistence" are not possible for our model.
 - Alexander et al. (2014) highlight the importance of applying evolutionary rescue theories used in conservation in medicine as well, as the dynamics are very similar. 
-- value/importance 
+- value/importance of report/model
+- k probably causes a lot of the (dis)advantage of the two strategies
 
 ## References
 Alexander HK et al. (2014) Evolutionary rescue: linking theory for conservation and medicine. *Evolutionary Applications* 7: 1161-79. DOI: https://doi.org/10.1111/eva.12221
