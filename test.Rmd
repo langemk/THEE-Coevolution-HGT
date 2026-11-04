@@ -75,6 +75,12 @@ The central questions are a) whether the population is rescued and b) which stra
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
+your_pathname = "/Users/macbookair/Library/CloudStorage/OneDrive-Personal/THEE prakti/THEE Coevolution"
+
+library(ggplot2)
+library(tidyr)
+library(dplyr)
+library(tibble)
 ```
 
 ## R Markdown
@@ -88,11 +94,43 @@ summary(cars)
 ```
 
 ## Including Plots
+```{r fig.cap = "Fig. 2: Extinciton probability with varying cost_r and induction_prob"}
 
-You can also embed plots, for example:
+# get data
+# if you want to access data from an earlier simulation, set the date to the day it was created (format YYYY-MM-DD) 
+date = Sys.Date()
+outcomes = read.csv(paste(your_pathname, "/data/combined_r_l_data", date, ".csv", sep = ""))
 
-```{r pressure, echo=FALSE}
-plot(pressure)
+## plot outcomes
+
+# treat parameters as a categorical axis
+outcomes$induction_prob <- factor(outcomes$induction_prob)
+outcomes$cost_r = factor(outcomes$cost_r)
+
+# fix the order of the five outcomes so colours are consistent
+outcomes$outcome <- factor(outcomes$outcome,
+  levels = c("extinction", "wt wins", "r wins", "l wins", "temporary coexistence"))
+
+## heat map for extinction (Claude)
+library(dplyr)
+
+# extinction probability per parameter combination
+ext <- outcomes %>%
+  dplyr::group_by(induction_prob, cost_r) %>%
+  dplyr::summarise(p_ext = mean(outcome == "extinction"),
+            n_runs = n(),
+            .groups = "drop")
+
+ggplot(ext, aes(x = cost_r, y = induction_prob, fill = p_ext)) +
+  geom_tile(colour = "white", linewidth = 0.8) +
+  geom_text(aes(label = sprintf("%.2f", p_ext)), size = 4) +
+  scale_fill_gradient(low = "white", high = "#D55E00",
+                      limits = c(0, 1), name = "P(extinction)") +
+  labs(x = "Cost of resistance (cost_r)",
+       y = "Induction probability (induction_prob)") +
+  coord_equal() +
+  theme_minimal() +
+  ggtitle("Probability of extinction")
+
 ```
 
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
