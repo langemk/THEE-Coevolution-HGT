@@ -133,4 +133,395 @@ ggplot(ext, aes(x = cost_r, y = induction_prob, fill = p_ext)) +
   ggtitle("Probability of extinction")
 
 ```
+```{r cost_r iterations, echo = F}
+# set some parameters to fixed values
+# set t_max to a value to be used throughout
+max_gen <- 2000
 
+N_init_wt <- 100
+N_init_r <- 0
+N_init_l <- 0
+N_init_p <- 1
+infection_prob <- 0.01
+lysogen_prob <- 0.002
+growth_rate <- 1.5
+mut_rate <- 0.002
+K <- 1000
+P_decline <- -0.5
+P_prod <- 1.5
+
+# determine how often to run the simulation for each set of parameters
+no_replicates <- 100
+
+# set parameters to vary
+induction_prob = 0.46
+cost_r = seq(0.05, 0.95, by = 0.15)
+
+# initialize data table - where to collect the results
+ data_table <- c()
+
+ # set seed for reproducibility
+ set.seed(10)
+
+# run the simulation across  chosen parameter: cost_r
+  # loop over selection coefficients
+  for(cval in cost_r){
+    # different way of running many simulations: make replicates using "repeat" function with a counter i
+    # reset counter
+    i<-1
+    repeat {
+      # increase counter by one
+      i<-i+1
+      # set seed inside loop to recreate single trajectories. for debugging/checking only
+      #set.seed(i) 
+      seed = i
+      # run the simulation once with changing parameter
+      one_run <- simulate_pop(N_init_wt, N_init_r, N_init_l, N_init_p, infection_prob, induction_prob, lysogen_prob, mut_rate, cval, growth_rate, max_gen, K, P_decline, P_prod)
+      
+      # Record population sizes at the final simulated generation
+      final_sizes <- as.numeric(tail(one_run, 1))
+      
+      # add current result of current iteration to datatable
+      data_table <- rbind(data_table,c(cval,final_sizes[1],final_sizes[2],final_sizes[3],final_sizes[4], seed )) # note that we add the varying parameters to the table too
+
+      # stop the repeated computation after no_replicates times
+      if(i>no_replicates) break
+    }
+}
+# define column names of data table
+colnames(data_table) <- c("cost_r", "wt", "r", "l", "p", "seed")
+# show the first lines of the output
+print(head(data_table))
+
+
+## determine outcomes
+# convert to dataframe
+outcomes = as.data.frame(data_table)
+outcomes$outcome <- NA_character_
+
+for (i in seq_len(nrow(outcomes))) {
+  wt <- outcomes[i, "wt"]
+  r  <- outcomes[i, "r"]
+  l  <- outcomes[i, "l"]
+  seed = outcomes [i, "seed"]
+
+  if (wt == 0 & r == 0 & l == 0) {
+    outcomes$outcome[i] <- "extinction"
+  } else if (wt > 0 & r == 0 & l == 0) {
+    outcomes$outcome[i] <- "wt wins"
+  } else if (r > 0 & wt == 0 & l == 0) {
+    outcomes$outcome[i] <- "r wins"
+  } else if (l > 0 & wt == 0 & r == 0) {
+    outcomes$outcome[i] <- "l wins"
+  } else {
+    outcomes$outcome[i] <- "temporary coexistence"
+  }
+}
+
+print(head(outcomes))
+
+# save data with today's date. any data generated on the same date will overwrite this file
+write.csv(outcomes, paste(your_pathname, "/data/cost_r_iterations_lowK", Sys.Date(), ".csv", sep = ""))
+```
+
+
+```{r cost_r iterations plots, echo = F}
+## plot outcomes of cost_r iterations
+
+# get data
+# if you want to access data from an earlier simulation, set the date to the day it was created (format YYYY-MM-DD), otherwise use Sys.Date()
+date = Sys.Date()
+outcomes = read.csv(paste(your_pathname, "/data/cost_r_iterations_lowK", date, ".csv", sep = ""))
+
+# treat cost_r as a categorical axis 
+outcomes$cost_r <- factor(outcomes$cost_r)
+
+# fix the order of the five outcomes so colours are consistent
+outcomes$outcome <- factor(outcomes$outcome,
+  levels = c("extinction", "wt wins", "r wins", "l wins", "temporary coexistence"))
+
+# define colors
+pal <- c("extinction"            = "grey50",
+         "wt wins"               = "#E69F00",
+         "r wins"                = "#0072B2",
+         "l wins"                = "#009E73",
+         "temporary coexistence" = "#F0E442")
+
+# proportion of each outcome per cost_r
+props <- outcomes %>%
+  count(cost_r, outcome, .drop = FALSE) %>%
+  group_by(cost_r) %>%
+  mutate(prop = n / sum(n)) %>%
+  ungroup() %>%
+  filter(n > 0)          # no labels for outcomes that never occur
+
+# barplot with percentage labels
+props <- tidyr::complete(props, cost_r, outcome, fill = list(prop = 0))
+ggplot(props, aes(x = cost_r, y = prop, fill = outcome)) +
+  geom_col(position = position_fill(reverse = TRUE)) +
+  geom_text(aes(label = ifelse(prop > 0, scales::percent(prop, accuracy = 1), ""),
+                colour = outcome == "r wins",
+                group = outcome),
+            position = position_fill(vjust = 0.5, reverse = TRUE),
+            size = 3.5, show.legend = FALSE) +
+  scale_colour_manual(values = c("TRUE" = "white", "FALSE" = "black")) +
+  scale_y_continuous(labels = scales::percent) +
+  scale_fill_manual(values = pal, drop = FALSE) +
+  labs(x = "Cost of resistance (cost_r)",
+       y = "Proportion of replicates",
+       fill = "Outcome") +
+  theme_minimal() +
+  ggtitle("Outcome proportions with different cost_r and K = 1000")
+```
+```{r induction_prob iterations, echo = F}
+# set some parameters to fixed values
+# set t_max to a value to be used throughout
+max_gen <- 2000
+
+N_init_wt <- 100
+N_init_r <- 0
+N_init_l <- 0
+N_init_p <- 1
+infection_prob <- 0.01
+lysogen_prob <- 0.002
+growth_rate <- 1.7
+mut_rate <- 0.0005 
+K <- 1000
+P_decline <- -0.5
+P_prod <- 1.5
+
+# determine how often to run the simulation for each set of parameters
+no_replicates <- 100
+
+# set parameters to vary
+induction_prob = seq(0.05, 0.95, by = 0.15)
+cost_r = 0.1
+
+# initialize data table - where to collect the results
+ data_table <- c()
+
+ # set seed for reproducibility
+  set.seed(10)
+
+# run the simulation across  chosen parameter: induction_prob
+  # loop over selection coefficients
+  for(ival in induction_prob){
+    # different way of running many simulations: make replicates using "repeat" function with a counter i
+    # reset counter
+    i<-1
+    repeat {
+      # increase counter by one
+      i<-i+1
+       # set seed inside loop to recreate single trajectories. for debugging/checking only
+      #set.seed(i) 
+      seed = i
+      # run the simulation once with changing parameter
+      one_run <- simulate_pop(N_init_wt, N_init_r, N_init_l, N_init_p, infection_prob, ival, lysogen_prob, mut_rate, cost_r, growth_rate, max_gen, K, P_decline, P_prod)
+      
+      # Record population sizes at the final simulated generation
+      final_sizes <- as.numeric(tail(one_run, 1))
+      
+      # add current result of current iteration to datatable
+      data_table <- rbind(data_table,c(ival,final_sizes[1],final_sizes[2],final_sizes[3],final_sizes[4], seed )) # note that we add the varying parameters to the table too
+
+      # stop the repeated computation after no_replicates times
+      if(i>no_replicates) break
+    }
+}
+# define column names of data table
+colnames(data_table) <- c("induction_prob", "wt", "r", "l", "p", "seed")
+# show the first lines of the output
+print(head(data_table))
+
+
+## determine outcomes
+# convert to dataframe
+outcomes = as.data.frame(data_table)
+outcomes$outcome <- NA_character_
+
+for (i in seq_len(nrow(outcomes))) {
+  wt <- outcomes[i, "wt"]
+  r  <- outcomes[i, "r"]
+  l  <- outcomes[i, "l"]
+  seed = outcomes [i, "seed"]
+
+  if (wt == 0 & r == 0 & l == 0) {
+    outcomes$outcome[i] <- "extinction"
+  } else if (wt > 0 & r == 0 & l == 0) {
+    outcomes$outcome[i] <- "wt wins"
+  } else if (r > 0 & wt == 0 & l == 0) {
+    outcomes$outcome[i] <- "r wins"
+  } else if (l > 0 & wt == 0 & r == 0) {
+    outcomes$outcome[i] <- "l wins"
+  } else {
+    outcomes$outcome[i] <- "temporary coexistence"
+  }
+}
+
+print(head(outcomes))
+
+# save data with today's date. any data generated on the same date will overwrite this file
+write.csv(outcomes, paste(your_pathname, "/data/induction_prob_iterations_lowK", Sys.Date(), ".csv", sep = ""))
+```
+
+
+```{r induction_prob iterations plots, echo = F}
+## plot outcomes of induction_prob iterations
+
+# get data
+# if you want to access data from an earlier simulation, set the date to the day it was created (format YYYY-MM-DD), otherwise use Sys.Date()
+date = Sys.Date()
+outcomes = read.csv(paste(your_pathname, "/data/induction_prob_iterations_lowK", date, ".csv", sep = ""))
+
+# treat induction_prob as a categorical axis
+outcomes$induction_prob <- factor(outcomes$induction_prob)
+
+# fix the order of the five outcomes so colours are consistent
+outcomes$outcome <- factor(outcomes$outcome,
+  levels = c("extinction", "wt wins", "r wins", "l wins", "temporary coexistence"))
+
+# define colors
+pal <- c("extinction"            = "grey50",
+         "wt wins"               = "#E69F00",
+         "r wins"                = "#0072B2",
+         "l wins"                = "#009E73",
+         "temporary coexistence" = "#F0E442")
+
+# proportion of each outcome per induction_prob
+props <- outcomes %>%
+  count(induction_prob, outcome, .drop = FALSE) %>%
+  group_by(induction_prob) %>%
+  mutate(prop = n / sum(n)) %>%
+  ungroup() %>%
+  filter(n > 0)          # no labels for outcomes that never occur
+
+# barplot with percentage labels
+props$outcome <- factor(props$outcome, levels = names(pal))
+props <- tidyr::complete(props, induction_prob, outcome, fill = list(prop = 0))
+ggplot(props, aes(x = induction_prob, y = prop, fill = outcome)) +
+  geom_col(position = position_fill(reverse = TRUE)) +
+  geom_text(aes(label = ifelse(prop > 0, scales::percent(prop, accuracy = 1), ""),
+                colour = outcome == "r wins",
+                group = outcome),
+            position = position_fill(vjust = 0.5, reverse = TRUE),
+            size = 3.5, show.legend = FALSE) +
+  scale_colour_manual(values = c("TRUE" = "white", "FALSE" = "black")) +
+  scale_y_continuous(labels = scales::percent) +
+  scale_fill_manual(values = pal, drop = FALSE) +
+  labs(x = "Induction probability (induction_prob)",
+       y = "Proportion of replicates",
+       fill = "Outcome") +
+  theme_minimal() +
+  ggtitle("Outcome proportions with different induction_prob and K = 1000")
+
+### Effect of lower K
+```{r cost_r LOW K iterations plots, echo = F}
+## plot outcomes of cost_r iterations
+
+# get data
+# if you want to access data from an earlier simulation, set the date to the day it was created (format YYYY-MM-DD), otherwise use Sys.Date()
+date = "2026-11-05"
+outcomes = read.csv(paste(your_pathname, "/data/cost_r_iterations_lowK", date, ".csv", sep = ""))
+
+# treat cost_r as a categorical axis 
+outcomes$cost_r <- factor(outcomes$cost_r)
+
+# fix the order of the five outcomes so colours are consistent
+outcomes$outcome <- factor(outcomes$outcome,
+  levels = c("extinction", "wt wins", "r wins", "l wins", "temporary coexistence"))
+
+# define colors
+pal <- c("extinction"            = "grey50",
+         "wt wins"               = "#E69F00",
+         "r wins"                = "#0072B2",
+         "l wins"                = "#009E73",
+         "temporary coexistence" = "#F0E442")
+
+# proportion of each outcome per cost_r
+props <- outcomes %>%
+  count(cost_r, outcome, .drop = FALSE) %>%
+  group_by(cost_r) %>%
+  mutate(prop = n / sum(n)) %>%
+  ungroup() %>%
+  filter(n > 0)          # no labels for outcomes that never occur
+
+# barplot with percentage labels
+props <- tidyr::complete(props, cost_r, outcome, fill = list(prop = 0))
+ggplot(props, aes(x = cost_r, y = prop, fill = outcome)) +
+  geom_col(position = position_fill(reverse = TRUE)) +
+  geom_text(aes(label = ifelse(prop > 0, scales::percent(prop, accuracy = 1), ""),
+                colour = outcome == "r wins",
+                group = outcome),
+            position = position_fill(vjust = 0.5, reverse = TRUE),
+            size = 3.5, show.legend = FALSE) +
+  scale_colour_manual(values = c("TRUE" = "white", "FALSE" = "black")) +
+  scale_y_continuous(labels = scales::percent) +
+  scale_fill_manual(values = pal, drop = FALSE) +
+  labs(x = "Cost of resistance (cost_r)",
+       y = "Proportion of replicates",
+       fill = "Outcome") +
+  theme_minimal() +
+  ggtitle("Outcome proportions with different cost_r and K = 1000")
+```
+*Supplementary Figure 9: Barplot of outcome proportions of 100 simulation replicates with varying `cost_r`, `K` = 1000, `induction_prob`= 0.46 and set model parameters (see model overview)*
+
+
+```{r induction_prob LOW K iterations plots, echo = F}
+## plot outcomes of induction_prob iterations
+
+# get data
+# if you want to access data from an earlier simulation, set the date to the day it was created (format YYYY-MM-DD), otherwise use Sys.Date()
+date = Sys.Date()
+outcomes = read.csv(paste(your_pathname, "/data/induction_prob_iterations_lowK", date, ".csv", sep = ""))
+
+# treat induction_prob as a categorical axis
+outcomes$induction_prob <- factor(outcomes$induction_prob)
+
+# fix the order of the five outcomes so colours are consistent
+outcomes$outcome <- factor(outcomes$outcome,
+  levels = c("extinction", "wt wins", "r wins", "l wins", "temporary coexistence"))
+
+# define colors
+pal <- c("extinction"            = "grey50",
+         "wt wins"               = "#E69F00",
+         "r wins"                = "#0072B2",
+         "l wins"                = "#009E73",
+         "temporary coexistence" = "#F0E442")
+
+# proportion of each outcome per induction_prob
+props <- outcomes %>%
+  count(induction_prob, outcome, .drop = FALSE) %>%
+  group_by(induction_prob) %>%
+  mutate(prop = n / sum(n)) %>%
+  ungroup() %>%
+  filter(n > 0)          # no labels for outcomes that never occur
+
+# barplot with percentage labels
+props$outcome <- factor(props$outcome, levels = names(pal))
+props <- tidyr::complete(props, induction_prob, outcome, fill = list(prop = 0))
+ggplot(props, aes(x = induction_prob, y = prop, fill = outcome)) +
+  geom_col(position = position_fill(reverse = TRUE)) +
+  geom_text(aes(label = ifelse(prop > 0, scales::percent(prop, accuracy = 1), ""),
+                colour = outcome == "r wins",
+                group = outcome),
+            position = position_fill(vjust = 0.5, reverse = TRUE),
+            size = 3.5, show.legend = FALSE) +
+  scale_colour_manual(values = c("TRUE" = "white", "FALSE" = "black")) +
+  scale_y_continuous(labels = scales::percent) +
+  scale_fill_manual(values = pal, drop = FALSE) +
+  labs(x = "Induction probability (induction_prob)",
+       y = "Proportion of replicates",
+       fill = "Outcome") +
+  theme_minimal() +
+  ggtitle("Outcome proportions with different induction_prob and K = 1000")
+
+```
+*Supplementary Figure 10: Barplot of outcome proportions of 100 simulation replicates with varying `induction_prob`, `K`= 1000, `cost_r`= 0.1 and set model parameters (see model overview)*
+
+
+
+
+
+
+
+```
