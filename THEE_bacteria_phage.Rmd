@@ -409,6 +409,8 @@ Looking at Fig. 4 and 5., two different behaviours of the two strategies become 
 The resistant strategy seems to be much more density-dependent: its outcome probability is not only dependent on the cost of r but also the induction probability, i.e., the fitness of l. In contrast, the lysogen strategy success is dependent on its own fitness: above a certain threshold, it performs well. Under this fitness threshold, the lysogen outcome probability drops to 0. 
 This might be due to the differences in phage dependency: the resistant strategy is phage-independent and arises through mutation (at a set mutation rate). The number of ofspring is stochastic depending on the muation rate. The lysogen strategy depends on a probability of integration which is multiplied by the phage population, giving the lysogen population a "boost". Up to a certain threshold of induction probability, the lysogen have a positive feedback loop: with every induction (i.e., death of a lysogen), more phages are produced which in turn increase the integration and hence creation of new lysogens. This removes the stochastic aspect and makes the growth of the lysogen population deterministic until a threshold where the positive feedback loop is not sustained and the integration probability/fitness cost becomes too high.
 
+Implications for phage therapy: 
+
 ## Limitations
 The model is a very simplistic depiction of bacteria-phage interactions. 
 - low phage production
@@ -440,7 +442,8 @@ Orr HA, Unckless RL (2008) Population Extinction and the Genetics of Adaptation.
 
 ## Author contributions
 - We worked on most parts together, often building on each other's work
-- Heatmaps by Marika
+- Heatmaps: Marika
+- Abstract: Aylin
 
 ## AI use declaration
 Claude and ChatGPT were used on the R code for

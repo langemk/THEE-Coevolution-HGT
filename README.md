@@ -8,20 +8,24 @@
 Stochastic, discrete-time simulation of a bacterial population exposed to temperate phages. Bacteria can survive in two ways:
 - Resistance: slow but permanent (rare mutation, growth cost)
 - Lysogeny: fast but risky. A phage integrates a wild-type cell which becomes a lysogen (= a bacterium that carries the dormant genome of a temperate phage). The prophage can later be induced and kill the cell.
+
 The model extends the basic evolutionary rescue model based on Orr & Unckless (2008) introduced in the Theoretical Ecology and Evolution Practical (Bank 2026).
 
-The projects includes iterations of the simulation with varied parameters. Plots can be generated to visualize the outcomes of the iterations.
+The project includes iterations of the simulation with varied parameters. Plots can be generated to visualize the outcomes of the iterations.
 
 ## Idea of the model
 Our model describes a bacterial population that is suddenly exposed to phages, as in phage therapy. In the new environment the wild-type (wt) bacteria are unfit, because phages infect and kill them. The population can only be rescued if some bacteria acquire a way to survive the phages. We compare two such strategies: resistance, which is independent of the phages and lysogeny, which is phage-dependent.
-The model asks how the two strategies perform under different conditions and when the population goes extinct. 
+The model asks under which conditions the bacterial population is rescued and if so, which strategy is more successful. 
 
 ## Project structure
 ```
 project/
 ├── README.md                  this file
 └── THEE_bacteria_phage.Rmd    main notebook (model, simulations, plots)
-└── data                       folder with data generated for analysis                      
+└── AI_prompts.docx            file with AI prompt used to make the project
+└── Model_Figure.png           figure of one generation life cycle in the model
+└── data                       folder with data generated for analysis 
+                               (all analysis chunk runs save data with current date in this folder unless uncommented)
 ```
 
 | Piece | What it does |
@@ -41,9 +45,10 @@ install.packages(c("ggplot2", "tidyr", "dplyr", "tibble"))
 
 ## How to run
 1. Open "THEE_bacteria_phage.Rmd" in RStudio.
-2. Run the chunks from top to bottom, or click "Knit" for an HTML report.
-3. Change the parameters in the "population trajectory" chunk to explore other scenarios. 
-4. Change the parameters in the "iterations" chunks to analyze simulation outcomes under different conditions.
+2. Set your local path name in the "R setup" chunk
+3. Run the chunks from top to bottom, or click "Knit" for an HTML report.
+4. Change the parameters in the "population trajectory" chunk to explore other scenarios. 
+5. Change the parameters in the "iterations" chunks to analyze simulation outcomes under different conditions.
 The analysis chunk runs many replicates and can be slow.
 
 ## Model overview: strategies and outcomes
@@ -55,7 +60,7 @@ The following are the two possible survival strategies that the bacteria populat
 
 2. Lysogen (fast but risky): wt bacteria can enter a lysogenic relationship with the phage (`lysogen_prob`), which becomes more likely the more phages are present. Lysogenic bacteria carry a dormant phage and therefore cannot die from infection. However, they can later be killed by induction of the dormant phage (`induction_prob`), which releases new phages into the environment. This strategy is phage-dependent.
 
-Figure 1 shows a schematic of one generation. Not depicted are the rates and probabilities leading to each new population (i.e., `growth_rate`, `mut_rate`, `cost_r`, `induction_prob` etc.). 
+Figure 1 shows a schematic of one generation. Not depicted are the rates and probabilities leading to each new population (i.e., `growth_rate`, `mut_rate`, `cost_r`, `lysogen_prob`, `induction_prob`, `infection_prob`, `P_decline`, `P_prod`). 
 
 ![Model Figure](Model_Figure.png)
 *Figure 1: Life cycle of one generation in the model*
