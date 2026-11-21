@@ -1,19 +1,24 @@
 ---
 
 title: "Resistance vs. lysogeny: bacterial defense against temperate phages under phage therapy"
+
 author: "Aylin & Marika"
+
 date: "2026-10-15"
+
 output:
   html_document:
     df_print: paged
 ---
 
 ## Abstract
-When bacteria face lethal phage pressure, two strategies can rescue a population: resistance, which is slow, costly and permanent, and lysogeny, which is immediate but can be lost when the dormant phage is induced. Which strategy succeeds, and when? Using a stochastic simulation model that includes phage dynamics, we varied the cost of resistance and the induction probability and recorded how often each simulation ended in extinction, wild-type persistence, resistant or lysogenic dominance, or temporary coexistence. 
+Phage therapy is a promising alternative to antibiotics, but bacteria can adapt to phages. When bacteria face lethal phage pressure, two strategies can rescue a population: resistance, which is slow, costly and permanent, and lysogeny, which is immediate but can be lost when the dormant phage is induced. Which strategy succeeds, and when? Using a stochastic simulation model that includes phage dynamics, we varied the cost of resistance and the induction probability and recorded how often each simulation ended in extinction, wild-type persistence, resistant or lysogenic dominance, or temporary coexistence. Lysogeny was the most common route to rescue as long as the dormant phage was stable, but it collapsed abruptly above an induction threshold, whereas resistance was less frequent but declined only gradually with its cost. These results suggest that phage therapy is most robust with phages that always kill their host (strictly lytic phages) or whose dormant form is quickly induced and kills the host (readily inducible phages), although resistance can still rescue the population unless it is very costly.
+
 
 ## Simulating evolutionary rescue under phage therapy
 
 In this notebook, we are implementing simulations of evolutionary rescue in a bacterial population under phage pressure. The model is based on a single-mutation, discrete-time framework (Bank 2026, Orr 2008) extended by a phage population and a second rescue strategy. This model can be thought of as a simulation of phage therapy. Phage therapy has recently gained renewed interest as an alternative therapy to antibiotics, which is limited by the spread of antibiotic resistances. A major limitation of phage therapy is the adaptation of the pathogenic bacteria to the phages. Adaptation can be very fast and with varied strategies (Karamlou 2025). For this model, phage therapy is understood as a sudden addition of phages to a wild-type bacteria population. As simulated here, two adaptation strategies with different costs can potentially rescue the bacterial population, i.e., render the phage therapy unsuccessful. We want to explore under which conditions the bacterial population is rescued and if so, which strategy is more successful.
+
 
 ### Model overview: strategies and outcomes
 
@@ -27,6 +32,7 @@ The following are the two possible survival strategies that the bacteria populat
 Figure 1 shows a schematic of one generation. Not depicted are the rates and probabilities leading to each new population (i.e., `growth_rate`, `mut_rate`, `cost_r`, `lysogen_prob`, `induction_prob`, `infection_prob`, `P_decline`, `P_prod`). 
 
 ![Model Figure](Model_Figure.png)
+
 *Figure 1: Life cycle of one generation in the model (from generation t to generation t+1)*
 
 All bacterial types grow with a shared carrying capacity (`K`) and the phage population is updated each generation from phage decline (`P_decline`) and from phage production at infection and induction events (`P_prod`). Resistant and lysogenic bacteria start at a population number of 0, so they have to arise from wt bacteria through mutations or integration (i.e., becoming a lysogen) and then spread before the total bacterial population goes extinct. Rescue means that the bacterial population (be it wt, resistant or lysogen) recovers and persists. 
@@ -35,6 +41,7 @@ The following are the three possible outcomes of our model:
 1. Extinction
 2. Only lysogen persists
 3. Only resistance persists
+
 
 ## List of variables and parameters
 
@@ -296,7 +303,7 @@ write.csv(outcomes, paste(your_pathname, "/data/combined_r_l_data", Sys.Date(), 
 ```
 
 ### Heat maps of the combined analysis
-The saved data from the grid simulation above is read in and for each combination of induction_prob (y axis) and cost_r (x axis), the proportion of replicates with a given outcome is calculated. This is shown as four heat maps (the number in each tile is the proportion of replicates, from 0 to 1). 
+The saved data from the grid simulation above is read in and for each combination of induction_prob (y axis) and cost_r (x axis), the proportion of replicates with a given outcome is calculated. This is shown as two heat maps in the main text (lysogen & resistance outcomes; the number in each tile is the proportion of replicate, from 0 to 1). The heat maps for extinction & survival are shown in Supplementary Figures 8 & 9. 
 
 ```{r heat maps prep, echo = F}
 # get data
@@ -315,50 +322,6 @@ outcomes$outcome <- factor(outcomes$outcome,
   levels = c("extinction", "wt wins", "r wins", "l wins", "temporary coexistence"))
 ```
 
-```{r heat map extinction, echo = F}
-## heat map for extinction (Claude)
-
-# extinction probability per parameter combination
-ext <- outcomes %>%
-  group_by(induction_prob, cost_r) %>%
-  summarise(p_ext = mean(outcome == "extinction"),
-            n_runs = n(),
-            .groups = "drop")
-
-ggplot(ext, aes(x = cost_r, y = induction_prob, fill = p_ext)) +
-  geom_tile(colour = "white", linewidth = 0.8) +
-  geom_text(aes(label = sprintf("%.2f", p_ext)), size = 4) +
-  scale_fill_gradient(low = "white", high = "#D55E00",
-                      limits = c(0, 1), name = "P(extinction)") +
-  labs(x = "Cost of resistance (cost_r)",
-       y = "Induction probability (induction_prob)") +
-  coord_equal() +
-  theme_minimal() +
-  ggtitle("Probability of extinction")
-```
-*Figure 2: Heat map of probability of extinction of the total population*
-
-```{r heat map survival/rescue, echo = F}
-## heat map for survival/rescue of total population
-# survival probability per parameter combination
-surv = outcomes %>%
-  group_by(induction_prob, cost_r) %>%
-  summarise(p_surv = mean(outcome != "extinction"),
-            n_runs = n(),
-            .groups = "drop")
-
-ggplot(surv, aes(x = cost_r, y = induction_prob, fill = p_surv)) +
-  geom_tile(colour = "white", linewidth = 0.8) +
-  geom_text(aes(label = sprintf("%.2f", p_surv)), size = 4) +
-  scale_fill_gradient(low = "white", high = "purple",
-                      limits = c(0, 1), name = "P(rescue)") +
-  labs(x = "Cost of resistance (cost_r)",
-       y = "Induction probability (induction_prob)") +
-  coord_equal() +
-  theme_minimal() +
-  ggtitle("Probability of rescue of total population")
-```
-*Figure 3: Heat map of probability of survival of the total population (= 1 - extinction; this counts every outcome except extinction, including wt wins and temporary coexistence)*
 
 ```{r heat map lysogen, echo = F}
 ## heat map for lysogen
@@ -380,7 +343,8 @@ ggplot(lys, aes(x = cost_r, y = induction_prob, fill = p_lys)) +
   theme_minimal() +
   ggtitle("Probability of lysogen outcome is high until threshold of induction probability")
 ```
-*Figure 4: Heat map of probability that only lysogens (l) remain*
+
+*Figure 2: Heat map of probability that only lysogens (l) remain*
 
 ```{r heat map resistance, echo = F}
 ## heat map for resistance
@@ -403,546 +367,10 @@ ggplot(res, aes(x = cost_r, y = induction_prob, fill = p_res)) +
   ggtitle("Probability of resistance outcome is low and gradually decreasing with increasing cost r")
 
 ```
-*Figure 5: Heat map of probability that only resistant bacteria (r) remain*
 
-Looking at Fig. 4 and 5., two different behaviours of the two strategies become apparent: The lysogen outcome probability is constantly comparatively high (no less than 50% of outcomes, and up to 100% of outcomes for lower induction probabilites) and abruptly decreases to 0% above a certain threshold. The resistant outcome probability is comparatively lower (not more than 39% of outcomes) and has a gradual decrease with increasing cost of r. Combined, this results in a survivability heatmap (Figure 3) that has a somewhat gradual decrease from left to right (increasing cost of r) but quite an abrupt drop from bottom to top (increasing induction probability). This behaviour is also visible when only varying one of the variable parameters: with increasing cost of r (induction_prob constant at 0.46), the decrease of resistance outcomes is gradual from 71 to 42% before dropping to 0. When no resistance is possible, the fractions of lysogen and extinction outcomes are constant at 74-79% and 21-26%, respectively (Supplementary Figure 5). When only the induction probability is increased (cost_r = 0.1), the lysogen outcomes stay between 57 and 68% and then drop to 0 above an induction probability of 0.65. Above this, the extinction fraction is constantly at 67% (Supplementary Figure 6). 
+*Figure 3: Heat map of probability that only resistant bacteria (r) remain*
 
-The resistant strategy seems to be much more density-dependent: its outcome probability is not only dependent on the cost of r but also the induction probability, i.e., the fitness of l. In contrast, the lysogen strategy success is dependent on its own fitness: above a certain threshold, it performs well. Under this fitness threshold, the lysogen outcome probability drops to 0. 
-This might be due to the differences in phage dependency: the resistant strategy is phage-independent and arises through mutation (at a set mutation rate). The number of ofspring is stochastic depending on the muation rate. The lysogen strategy depends on a probability of integration which is multiplied by the phage population, giving the lysogen population a "boost". Up to a certain threshold of induction probability, the lysogen have a positive feedback loop: with every induction (i.e., death of a lysogen), more phages are produced which in turn increase the integration and hence creation of new lysogens. This removes the stochastic aspect and makes the growth of the lysogen population deterministic until a threshold where the positive feedback loop is not sustained and the integration probability/fitness cost becomes too high.
-
-Implications for phage therapy: 
-
-## Limitations
-The model is a very simplistic depiction of bacteria-phage interactions. 
-- low phage production
-- only two strategies
-- "rigid" strategies and not an arms race (coevolution) between bacteria and phages
-- unrealistic to have temperate phages for phage therapy
-
-
-
-## Conclusions/Limitations/Thoughts
-- start with 1 phage. not so realistic, also if want to test effect of phage therapy varying this could be a thing --> as outlook!
-- also phage production is very low (but strongly boosts lysogen production so maybe good to keep low)
-- outcome is dependent on K: if K is lower, l is a more likely outcome. would be interesting to analyze this but no time. --> is it tho? barplots with lower K don't seem to have more but rather less l
-- due to interaction with phage population, the lysogen generation becomes deterministic instead of stochastic (like the resistant generation). it is boosted by phages. above a threshold of around 0.5 induction probabilty, the lysogen population abruptly looses its advantage as the fitness cost is too high, the population cannot be sustained.
-- mention that outcomes "wt persists" and "coexistence" are not possible for our model.
-- Alexander et al. (2014) highlight the importance of applying evolutionary rescue theories used in conservation in medicine as well, as the dynamics are very similar. 
-- value/importance of report/model
-- k probably causes a lot of the (dis)advantage of the two strategies
-- r is strongly dependent on density dependence (gradual increase of outcomes with increasing induction_prob, i.e., less l), while l is more constantly high but depends a lot on a high fitness , i.e., low enough induction_prob (drop from 50 to 0% outcomes above threshold of around 0.65)
-
-## References
-Alexander HK et al. (2014) Evolutionary rescue: linking theory for conservation and medicine. *Evolutionary Applications* 7: 1161-79. DOI: https://doi.org/10.1111/eva.12221
-
-Bank C (2026) Course material: basic evolutionary rescue notebook
-
-Karamlou S et al. (2025) Bacterial resistance to phage therapy: Mechanisms and strategies to overcome it. *Current Molecular Pharmacology* 18: 108-122. DOI: https://doi.org/10.1016/j.cmp.2025.11.003
-
-Orr HA, Unckless RL (2008) Population Extinction and the Genetics of Adaptation. *The American Naturalist* 172(2). DOI:https://doi.org/10.1086/589460
-
-## Author contributions
-- We worked on most parts together, often building on each other's work
-- Heatmaps: Marika
-- Abstract: Aylin
-
-## AI use declaration
-Claude and ChatGPT were used on the R code for
-- debugging
-- implementing concepts in the base code (e.g., carrying capacity)
-- generating plots
-- RMarkdown layout
-Furthermore, Claude was used to determine useful parameter ranges.
-
-For debugging and implementing concepts, suggestions from Claude and ChatGPT were not copied as a whole but selective changes were manually made in the code to ensure no unknown changes happened. 
-For visuals (plots and layout), whole code blocks were copied. The outputs were checked visually (i.e., whether they generated what we imagined). 
-
-## Supplementary figures
-### Population trajectories with different strategies
-Here we plot population trajectories with 1) both strategies, 2) no strategies, 3) only lysogeny (no resistance) and 4) only resistance (no lysogeny) for illustration purposes.
-
-```{r all strategies, echo = F}
-# simulation and plotting of complete model
-# set t_max to a value to be used throughout
-
-max_gen <- 500
-
-N_init_wt <- 100
-N_init_r <- 0
-N_init_l <- 0
-N_init_p <- 1
-infection_prob <- 0.01
-lysogen_prob <- 0.002
-growth_rate <- 1.5
-mut_rate <- 0.002 
-K <- 2000
-P_decline <- -0.5
-P_prod <- 1.5
-
-# set parameters to vary
-induction_prob = 0.48
-cost_r = 0.35
-
-
-set.seed(10)
-# create your simulation data
-output <- simulate_pop(N_init_wt, N_init_r, N_init_l, N_init_p, infection_prob, induction_prob, lysogen_prob, mut_rate, cost_r, growth_rate, max_gen, K, P_decline, P_prod)
-# show the last few lines of the data table
-print(tail(output))
-
-
-# plot the output - note that the plot range and the x axis have to be adjusted based on the length of the table
-# determine x axis range 
-x_range <- 0:(length(output[,1])-1)
-
-# Convert simulation output into a data frame
-output_df <- as.data.frame(output) %>%
-  mutate(Generation = as.numeric(rownames(output))) %>%
-  mutate(Total = wt + r + l) 
-
-# Reshape data for ggplot
-plot_data <- output_df %>%
-  pivot_longer(
-    cols = c(Total, wt, r, l, p),
-    names_to = "Population",
-    values_to = "Size"
-  ) %>%
-  mutate(
-    Population = factor(
-      Population,
-      levels = c("Total", "wt", "r", "l", "p"),
-      labels = c(
-        "Total population",
-        "Wild type",
-        "Resistant",
-        "Lysogenic",
-        "Phages"
-      )
-    )
-  )
-
-
-# Plot population trajectories
-ggplot(
-  plot_data,
-  aes(
-    x = Generation,
-    y = Size,
-    colour = Population,
-    linetype = Population,
-    alpha = Population
-  )
-) +
-  geom_line(linewidth = 0.4) +
-  scale_colour_manual(
-    values = c(
-      "Total population" = "black",
-      "Wild type" = "#E69F00",
-      "Resistant" = "#0072B2",
-      "Lysogenic" = "#009E73",
-      "Phages" = "#CC79A7"
-    )
-  ) +
-  scale_linetype_manual(
-    values = c(
-      "Total population" = "dotted",
-      "Wild type" = "solid",
-      "Resistant" = "solid",
-      "Lysogenic" = "solid",
-      "Phages" = "solid"
-    )
-  ) +
-  scale_alpha_manual(
-    values = c(
-      "Total population" = 0.7,
-      "Wild type" = 1,
-      "Resistant" = 1,
-      "Lysogenic" = 1,
-      "Phages" = 1
-    )
-  ) +
-  labs(
-    x = "Generation",
-    y = "Population size",
-    colour = NULL,
-    linetype = NULL,
-    alpha = NULL
-  ) +
-  ggtitle("Evolutionary rescue with resistant and lysogenic bacteria") +
-  theme_classic() +
-  theme(
-    legend.position = "right",
-    legend.justification = "center",
-    legend.background = element_blank()
-  )
-
-```
-*Supplementary Figure 1: Population trajectories with resistant and lysogen strategies with set model parameters (see model overview), `induction_prob` = 0.48 and `cost_r`= 0.35. `K` = 500 for better resolution.*
-
-```{r No survival strategy, echo = F}
-# simulation and plotting of model without resistance or lysogens
-
-max_gen <- 2000
-N_init_wt <- 100
-N_init_r <- 0
-N_init_l <- 0
-N_init_p <- 1
-infection_prob <- 0.01
-lysogen_prob <- 0
-growth_rate <- 1.5
-mut_rate <- 0
-K <- 2000
-P_decline <- -0.5
-P_prod <- 1.5
-
-# set parameters to vary
-induction_prob = 0.35
-cost_r = 0
-
-
-set.seed(10)
-# create your simulation data
-output <- simulate_pop(N_init_wt, N_init_r, N_init_l, N_init_p, infection_prob, induction_prob, lysogen_prob, mut_rate, cost_r, growth_rate, max_gen, K, P_decline, P_prod)
-# show the last few lines of the data table
-print(tail(output))
-
-
-# plot the output - note that the plot range and the x axis have to be adjusted based on the length of the table
-# determine x axis range 
-x_range <- 0:(length(output[,1])-1)
-
-
-# Convert simulation output into a data frame
-output_df <- as.data.frame(output) %>%
-  mutate(Generation = as.numeric(rownames(output))) %>%
-  mutate(Total = wt + r + l) 
-
-# Reshape data for ggplot
-plot_data <- output_df %>%
-  pivot_longer(
-    cols = c(Total, wt, r, l, p),
-    names_to = "Population",
-    values_to = "Size"
-  ) %>%
-  mutate(
-    Population = factor(
-      Population,
-      levels = c("Total", "wt", "r", "l", "p"),
-      labels = c(
-        "Total population",
-        "Wild type",
-        "Resistant",
-        "Lysogenic",
-        "Phages"
-      )
-    )
-  )
-
-
-# Plot population trajectories
-ggplot(
-  plot_data,
-  aes(
-    x = Generation,
-    y = Size,
-    colour = Population,
-    linetype = Population,
-    alpha = Population
-  )
-) +
-  geom_line(linewidth = 0.4) +
-  scale_colour_manual(
-    values = c(
-      "Total population" = "black",
-      "Wild type" = "#E69F00",
-      "Resistant" = "#0072B2",
-      "Lysogenic" = "#009E73",
-      "Phages" = "#CC79A7"
-    )
-  ) +
-  scale_linetype_manual(
-    values = c(
-      "Total population" = "dotted",
-      "Wild type" = "solid",
-      "Resistant" = "solid",
-      "Lysogenic" = "solid",
-      "Phages" = "solid"
-    )
-  ) +
-  scale_alpha_manual(
-    values = c(
-      "Total population" = 0.7,
-      "Wild type" = 1,
-      "Resistant" = 1,
-      "Lysogenic" = 1,
-      "Phages" = 1
-    )
-  ) +
-  labs(
-    x = "Generation",
-    y = "Population size",
-    colour = NULL,
-    linetype = NULL,
-    alpha = NULL
-  ) +
-  ggtitle("Evolutionary rescue with no survival strategy") +
-  theme_classic() +
-  theme(
-    legend.position = "right",
-    legend.justification = "center",
-    legend.background = element_blank()
-  )
-
-``` 
-*Supplementary Figure 2: Population trajectories with no survival strategies with set model parameters (see model overview) and `lysogen_prob` = 0 and `mut_rate = 0`*
-
-
-```{r No resistance, echo =F}
-# simulation and plotting with only one survival strategy: lysogeny (no resistance)
-
-max_gen <- 2000
-N_init_wt <- 100
-N_init_r <- 0
-N_init_l <- 0
-N_init_p <- 1
-infection_prob <- 0.01
-lysogen_prob <- 0.002
-growth_rate <- 1.5
-mut_rate <- 0
-K <- 2000
-P_decline <- -0.5
-P_prod <- 1.5
-
-# set parameters to vary
-induction_prob = 0.35
-cost_r = 0
-
-
-set.seed(10)
-# create your simulation data
-output <- simulate_pop(N_init_wt, N_init_r, N_init_l, N_init_p, infection_prob, induction_prob, lysogen_prob, mut_rate, cost_r, growth_rate, max_gen, K, P_decline, P_prod)
-# show the last few lines of the data table
-print(tail(output))
-
-
-# plot the output - note that the plot range and the x axis have to be adjusted based on the length of the table
-# determine x axis range 
-x_range <- 0:(length(output[,1])-1)
-
-# Convert simulation output into a data frame
-output_df <- as.data.frame(output) %>%
-  mutate(Generation = as.numeric(rownames(output))) %>%
-  mutate(Total = wt + r + l) 
-
-# Reshape data for ggplot
-plot_data <- output_df %>%
-  pivot_longer(
-    cols = c(Total, wt, r, l, p),
-    names_to = "Population",
-    values_to = "Size"
-  ) %>%
-  mutate(
-    Population = factor(
-      Population,
-      levels = c("Total", "wt", "r", "l", "p"),
-      labels = c(
-        "Total population",
-        "Wild type",
-        "Resistant",
-        "Lysogenic",
-        "Phages"
-      )
-    )
-  )
-
-
-# Plot population trajectories
-ggplot(
-  plot_data,
-  aes(
-    x = Generation,
-    y = Size,
-    colour = Population,
-    linetype = Population,
-    alpha = Population
-  )
-) +
- geom_line(linewidth = 0.4) +
-  scale_colour_manual(
-    values = c(
-      "Total population" = "black",
-      "Wild type" = "#E69F00",
-      "Resistant" = "#0072B2",
-      "Lysogenic" = "#009E73",
-      "Phages" = "#CC79A7"
-    )
-  ) +
-  scale_linetype_manual(
-    values = c(
-      "Total population" = "dotted",
-      "Wild type" = "solid",
-      "Resistant" = "solid",
-      "Lysogenic" = "solid",
-      "Phages" = "solid"
-    )
-  ) +
-  scale_alpha_manual(
-    values = c(
-      "Total population" = 0.7,
-      "Wild type" = 1,
-      "Resistant" = 1,
-      "Lysogenic" = 1,
-      "Phages" = 1
-    )
-  ) +
-  labs(
-    x = "Generation",
-    y = "Population size",
-    colour = NULL,
-    linetype = NULL,
-    alpha = NULL
-  ) +
-  ggtitle("Evolutionary rescue with only lysogenic bacteria") +
-  theme_classic() +
-  theme(
-    legend.position = "right",
-    legend.justification = "center",
-    legend.background = element_blank()
-  )
-```
-*Supplementary Figure 3: Population trajectories with only lysogenic strategy with set model parameters (see model overview), `lysogen_prob` = 0.002, `mut_rate` = 0 and `induction_prob` = 0.35*
-
-
-```{r No lysogeny, echo =F}
-# simulation and plotting with only one survival strategy: resistance (no lysogeny)
-
-
-max_gen <- 2000
-
-N_init_wt <- 100
-N_init_r <- 0
-N_init_l <- 0
-N_init_p <- 1
-infection_prob <- 0.01
-lysogen_prob <- 0.002
-growth_rate <- 1.5
-mut_rate <- 0.002 
-K <- 2000
-P_decline <- -0.5
-P_prod <- 1.5
-
-# set parameters to vary
-induction_prob = 0.35
-cost_r = 0.35
-
-set.seed(10)
-# create your simulation data
-output <- simulate_pop(N_init_wt, N_init_r, N_init_l, N_init_p, infection_prob, induction_prob, lysogen_prob, mut_rate, cost_r, growth_rate, max_gen, K, P_decline, P_prod)
-# show the last few lines of the data table
-print(tail(output))
-
-
-# plot the output - note that the plot range and the x axis have to be adjusted based on the length of the table
-# determine x axis range 
-x_range <- 0:(length(output[,1])-1)
-
-
-# Convert simulation output into a data frame
-output_df <- as.data.frame(output) %>%
-  mutate(Generation = as.numeric(rownames(output))) %>%
-  mutate(Total = wt + r + l) 
-
-# Reshape data for ggplot
-plot_data <- output_df %>%
-  pivot_longer(
-    cols = c(Total, wt, r, l, p),
-    names_to = "Population",
-    values_to = "Size"
-  ) %>%
-  mutate(
-    Population = factor(
-      Population,
-      levels = c("Total", "wt", "r", "l", "p"),
-      labels = c(
-        "Total population",
-        "Wild type",
-        "Resistant",
-        "Lysogenic",
-        "Phages"
-      )
-    )
-  )
-
-
-# Plot population trajectories
-ggplot(
-  plot_data,
-  aes(
-    x = Generation,
-    y = Size,
-    colour = Population,
-    linetype = Population,
-    alpha = Population
-  )
-) +
-  geom_line(linewidth = 0.4) +
-  scale_colour_manual(
-    values = c(
-      "Total population" = "black",
-      "Wild type" = "#E69F00",
-      "Resistant" = "#0072B2",
-      "Lysogenic" = "#009E73",
-      "Phages" = "#CC79A7"
-    )
-  ) +
-  scale_linetype_manual(
-    values = c(
-      "Total population" = "dotted",
-      "Wild type" = "solid",
-      "Resistant" = "solid",
-      "Lysogenic" = "solid",
-      "Phages" = "solid"
-    )
-  ) +
-  scale_alpha_manual(
-    values = c(
-      "Total population" = 0.7,
-      "Wild type" = 1,
-      "Resistant" = 1,
-      "Lysogenic" = 1,
-      "Phages" = 1
-    )
-  ) +
-  labs(
-    x = "Generation",
-    y = "Population size",
-    colour = NULL,
-    linetype = NULL,
-    alpha = NULL
-  ) +
-  ggtitle("Evolutionary rescue with only resistant bacteria") +
-  theme_classic() +
-  theme(
-    legend.position = "right",
-    legend.justification = "center",
-    legend.background = element_blank()
-  )
-
-```
-*Supplementary Figure 4: Population trajectories with only resistant strategy with set model parameters (see model overview), `lysogen_prob` = 0, `mut_rate` = 0.002 and `cost_r` = 0.35*
-
-
-
-### Analysis: Effects of induction_prob and cost_r
-Here, we analyze the effects of varying induction probability (~ lysogen death rate) and the cost of r (~ resistant death rate) on three possible outcomes:
-
-1. Extinction: the total bacterial population (wt + r + l) goes extinct
-2. Resistance: wt and l go extinct, r remains
-3. Lysogen: wt and r go extinct, l remains
-
-Coexistence is a category in our analysis when neither l or r have gone extinct by the end of the simulation (after `t_max`generations). Running these cases with longer `t_max`showed that there is in fact no equilibrium between r and l but one of the two was declining and had not yet reached a population size of 0 by the end of the simulation. This case is termed "temporary coexistence". 
-
-The proportion of outcomes is plotted as barplots (for varying induction probabilty and cost of r, respectively).
+Looking at Fig. 2 and 3., two different behaviors of the two strategies become apparent: The lysogen outcome probability is constantly comparatively high (no less than 50% of outcomes, and up to 100% of outcomes for lower induction probabilities) and abruptly decreases to 0% above a certain threshold. The resistant outcome probability is comparatively lower (not more than 39% of outcomes) and has a gradual decrease with increasing cost of r. Combined, this results in a survivability heatmap (Supplementary Figure 9) that has a somewhat gradual decrease from left to right (increasing cost of r) but quite an abrupt drop from bottom to top (increasing induction probability). This behavior is also visible when only varying one of the variable parameters: with increasing cost of r (induction_prob constant at 0.46), the decrease of resistance outcomes is gradual from 71 to 42% before dropping to 0 (Figure 4). When no resistance is possible, the fractions of lysogen and extinction outcomes are constant at 74-79% and 21-26%, respectively (Supplementary Figure 7). When only the induction probability is increased (cost_r = 0.1), the lysogen outcomes stay between 57 and 68% and then drop to 0 above an induction probability of 0.65. Above this, the extinction fraction is constantly at 67% (Supplementary Figure 5). 
 
 ```{r cost_r iterations, echo = F}
 # set some parameters to fixed values
@@ -1084,7 +512,562 @@ ggplot(props, aes(x = cost_r, y = prop, fill = outcome)) +
   theme_minimal() +
   ggtitle("Outcome proportions with different cost_r")
 ```
-*Supplementary Figure 5: Barplot of outcome proportions of 100 simulation replicates with varying `cost_r`, `induction_prob`= 0.46 and set model parameters (see model overview)*
+
+*Figure 4: Barplot of outcome proportions of 100 simulation replicates with varying `cost_r`, `induction_prob`= 0.46 and set model parameters (see model overview)*
+
+The resistant strategy seems to be much more density-dependent: its outcome probability is not only dependent on the cost of r but also the induction probability, i.e., the fitness of l. In contrast, the lysogen strategy success is dependent on its own fitness: above a certain threshold, it performs well. Under this fitness threshold, the lysogen outcome probability drops to 0. 
+This might be due to the differences in phage dependency: the resistant strategy is phage-independent and arises through mutation (at a set mutation rate). The number of ofspring is stochastic depending on the muation rate. The lysogen strategy depends on a probability of integration which is multiplied by the phage population, giving the lysogen population a "boost". Up to a certain threshold of induction probability, the lysogen have a positive feedback loop: with every induction (i.e., death of a lysogen), more phages are produced which in turn increase the integration and hence creation of new lysogens. This removes the stochastic aspect and makes the growth of the lysogen population deterministic until a threshold where the positive feedback loop is not sustained and the integration probability/fitness cost becomes too high.
+
+
+
+## Limitations
+Our model is a very simplified depiction of bacteria-phage interactions and isn't parameterized with empirical data. 
+- Only two strategies and these are rigid. There is no coevolution (arms race) between bacteria and phages, not other defense mechanisms and no spatial structure.
+- Temperate phages are usually avoided in therapy. The lysogen strategy is therefore most relevant for unintended temperate phages or engineered phages and the model is better seen as a thought experiment.
+- Each simulation starts with a single phage, which is not realistic. Varying the initial phage number would directly test the effect of the therapy dose and is an obvious outlook.
+- Phage production ("P_prod") is low. It was kept low because production strongly boosts lysogen formation, but the sensitivity to "P_prod" was not tested.
+- The carrying capacity (K) probably shapes the relative advantage of the two strategies, since both depend on density. We did not analyse this systematically. Informal checks with lower "K" did not suggest more lysogen outcomes, but this wasn't tested formally.
+- Outcomes are recorded only at the final generation ("t_max"). "Temporary coexistence" means that one strategy was still declining at "t_max", so there is no stable coexistence in our model. Wild-type persistence is not possible with the chosen parameters. 
+- 100 replicates per parameter combination and a grid with steps of 0.15 limit precision. Thresholds (e.g. 0.65) are approximate. 
+- The parameters were not identical in all analyses ("growth_rate" and "mut_rate" differ between the heat maps/Supplementary Figure 5 and the "cost_r" analysis in Figure 4), so figures should be compared qualitatively. 
+
+
+## Discussion: Implications for phage therapy
+Phage therapy fails when the pathogen is rescued by adaptation, so it can be analysed like any other case of evolutionary rescue. Alexander et al. (2014) highlight that the dynamics are very similar to those in conservation biology and that rescue theory should be applied in medicine as well. In our model, rescue depends on how often a strategy arises (mutation or integration), on its fitness cost and on stochastic loss while rare. Three implications follow. They are hypotheses from a simplified model, not predictions.
+
+**1. Temperate phages can protect bacteria instead of killing them.**
+When the dormant phage is stable (low "induction_prob"), lysogeny was the most common route to rescue (Figure 2). Because integration scales with phage density, adding phages fuels a positive feedback loop (induction, more phages, more integration, more lysogeny). A phage that can integrate may therefore turn the therapeutic agent into a protective element for the bacteria. This is consistent with the general preference for strictly lytic phages in therapy. In our mode, removing lysogeny leaves resistance as the only route to rescue (Supplementary Figure 6).
+
+**2. Unstable lysogeny makes phages more reliable.**
+Lysogen success collapses above an induction threshold (about 0.65 at "cost-r" = 0.1; Supplementary Figure 5). Above it, the extinction fraction was constant at 67%. Phage whose prophage state is readily induced, or is lethal to the host, should therefore be much less likely to be exploited by lysogeny.
+
+**3. Resistance remains the robust escape route.**
+Resistance was a less frequent outcome than lysogeny, but it declined only gradually with increasing cost: from 71 to 42% of replicates before dropping to 0 (Figure 4). A moderate cost of resistance is therefore not enough to prevent rescue by resistance. Even without lysogeny, phage therapy can thus be expected to fail in a substantial fraction of cases whenever resistant mutants arise, unless resistance is very costly. 
+
+
+## Conclusions
+Resistance and lysogeny rescue bacteria in very different ways. Lysogeny is boosted by the phage population, which makes its emergence nearly deterministic instead of stochastic like the emergence of resistance. As long as the dormant opahe is stable, lysogeny is therefore the dominant outcome, but it collapses abruptly once induction makes it too costly. Resistance is phage-dependent (it also depends on the fitness of the lysogens) and decreases only gradually with its cost.
+For phage therapy, this points to strictly lytic or readily inducible phages, but even then resitance can resuce the bacteria unless it's very costly. The value of the model lies in making these mechanisms transparent and in showing which parameters matter. It is not calibrated to real systems, so the conclusions are hypotheses to be tested with more realistic phage dynamics and experiments.
+
+
+## References
+Alexander HK et al. (2014) Evolutionary rescue: linking theory for conservation and medicine. *Evolutionary Applications* 7: 1161-79. DOI: https://doi.org/10.1111/eva.12221
+
+Bank C (2026) Course material: basic evolutionary rescue notebook
+
+Karamlou S et al. (2025) Bacterial resistance to phage therapy: Mechanisms and strategies to overcome it. *Current Molecular Pharmacology* 18: 108-122. DOI: https://doi.org/10.1016/j.cmp.2025.11.003
+
+Orr HA, Unckless RL (2008) Population Extinction and the Genetics of Adaptation. *The American Naturalist* 172(2). DOI:https://doi.org/10.1086/589460
+
+
+## Author contributions
+- We worked on most parts together, often building on each other's work
+- Heatmaps: Marika
+- Abstract: Aylin
+
+
+## AI use declaration
+Claude and ChatGPT were used on the R code for
+- debugging
+- implementing concepts in the base code (e.g., carrying capacity)
+- generating plots
+- RMarkdown layout
+Furthermore, Claude was used to determine useful parameter ranges.
+
+For debugging and implementing concepts, suggestions from Claude and ChatGPT were not copied as a whole but selective changes were manually made in the code to ensure no unknown changes happened. 
+For visuals (plots and layout), whole code blocks were copied. The outputs were checked visually (i.e., whether they generated what we imagined). 
+
+
+## Supplementary figures
+### Population trajectories with different strategies
+Here we plot population trajectories with 1) both strategies, 2) no strategies, 3) only lysogeny (no resistance) and 4) only resistance (no lysogeny) for illustration purposes.
+
+```{r all strategies, echo = F}
+# simulation and plotting of complete model
+# set t_max to a value to be used throughout
+
+max_gen <- 500
+
+N_init_wt <- 100
+N_init_r <- 0
+N_init_l <- 0
+N_init_p <- 1
+infection_prob <- 0.01
+lysogen_prob <- 0.002
+growth_rate <- 1.5
+mut_rate <- 0.002 
+K <- 2000
+P_decline <- -0.5
+P_prod <- 1.5
+
+# set parameters to vary
+induction_prob = 0.48
+cost_r = 0.35
+
+
+set.seed(10)
+# create your simulation data
+output <- simulate_pop(N_init_wt, N_init_r, N_init_l, N_init_p, infection_prob, induction_prob, lysogen_prob, mut_rate, cost_r, growth_rate, max_gen, K, P_decline, P_prod)
+# show the last few lines of the data table
+print(tail(output))
+
+
+# plot the output - note that the plot range and the x axis have to be adjusted based on the length of the table
+# determine x axis range 
+x_range <- 0:(length(output[,1])-1)
+
+# Convert simulation output into a data frame
+output_df <- as.data.frame(output) %>%
+  mutate(Generation = as.numeric(rownames(output))) %>%
+  mutate(Total = wt + r + l) 
+
+# Reshape data for ggplot
+plot_data <- output_df %>%
+  pivot_longer(
+    cols = c(Total, wt, r, l, p),
+    names_to = "Population",
+    values_to = "Size"
+  ) %>%
+  mutate(
+    Population = factor(
+      Population,
+      levels = c("Total", "wt", "r", "l", "p"),
+      labels = c(
+        "Total population",
+        "Wild type",
+        "Resistant",
+        "Lysogenic",
+        "Phages"
+      )
+    )
+  )
+
+
+# Plot population trajectories
+ggplot(
+  plot_data,
+  aes(
+    x = Generation,
+    y = Size,
+    colour = Population,
+    linetype = Population,
+    alpha = Population
+  )
+) +
+  geom_line(linewidth = 0.4) +
+  scale_colour_manual(
+    values = c(
+      "Total population" = "black",
+      "Wild type" = "#E69F00",
+      "Resistant" = "#0072B2",
+      "Lysogenic" = "#009E73",
+      "Phages" = "#CC79A7"
+    )
+  ) +
+  scale_linetype_manual(
+    values = c(
+      "Total population" = "dotted",
+      "Wild type" = "solid",
+      "Resistant" = "solid",
+      "Lysogenic" = "solid",
+      "Phages" = "solid"
+    )
+  ) +
+  scale_alpha_manual(
+    values = c(
+      "Total population" = 0.7,
+      "Wild type" = 1,
+      "Resistant" = 1,
+      "Lysogenic" = 1,
+      "Phages" = 1
+    )
+  ) +
+  labs(
+    x = "Generation",
+    y = "Population size",
+    colour = NULL,
+    linetype = NULL,
+    alpha = NULL
+  ) +
+  ggtitle("Evolutionary rescue with resistant and lysogenic bacteria") +
+  theme_classic() +
+  theme(
+    legend.position = "right",
+    legend.justification = "center",
+    legend.background = element_blank()
+  )
+
+```
+
+*Supplementary Figure 1: Population trajectories with resistant and lysogen strategies with set model parameters (see model overview), `induction_prob` = 0.48 and `cost_r`= 0.35. `K` = 500 for better resolution.*
+
+```{r No survival strategy, echo = F}
+# simulation and plotting of model without resistance or lysogens
+
+max_gen <- 2000
+N_init_wt <- 100
+N_init_r <- 0
+N_init_l <- 0
+N_init_p <- 1
+infection_prob <- 0.01
+lysogen_prob <- 0
+growth_rate <- 1.5
+mut_rate <- 0
+K <- 2000
+P_decline <- -0.5
+P_prod <- 1.5
+
+# set parameters to vary
+induction_prob = 0.35
+cost_r = 0
+
+
+set.seed(10)
+# create your simulation data
+output <- simulate_pop(N_init_wt, N_init_r, N_init_l, N_init_p, infection_prob, induction_prob, lysogen_prob, mut_rate, cost_r, growth_rate, max_gen, K, P_decline, P_prod)
+# show the last few lines of the data table
+print(tail(output))
+
+
+# plot the output - note that the plot range and the x axis have to be adjusted based on the length of the table
+# determine x axis range 
+x_range <- 0:(length(output[,1])-1)
+
+
+# Convert simulation output into a data frame
+output_df <- as.data.frame(output) %>%
+  mutate(Generation = as.numeric(rownames(output))) %>%
+  mutate(Total = wt + r + l) 
+
+# Reshape data for ggplot
+plot_data <- output_df %>%
+  pivot_longer(
+    cols = c(Total, wt, r, l, p),
+    names_to = "Population",
+    values_to = "Size"
+  ) %>%
+  mutate(
+    Population = factor(
+      Population,
+      levels = c("Total", "wt", "r", "l", "p"),
+      labels = c(
+        "Total population",
+        "Wild type",
+        "Resistant",
+        "Lysogenic",
+        "Phages"
+      )
+    )
+  )
+
+
+# Plot population trajectories
+ggplot(
+  plot_data,
+  aes(
+    x = Generation,
+    y = Size,
+    colour = Population,
+    linetype = Population,
+    alpha = Population
+  )
+) +
+  geom_line(linewidth = 0.4) +
+  scale_colour_manual(
+    values = c(
+      "Total population" = "black",
+      "Wild type" = "#E69F00",
+      "Resistant" = "#0072B2",
+      "Lysogenic" = "#009E73",
+      "Phages" = "#CC79A7"
+    )
+  ) +
+  scale_linetype_manual(
+    values = c(
+      "Total population" = "dotted",
+      "Wild type" = "solid",
+      "Resistant" = "solid",
+      "Lysogenic" = "solid",
+      "Phages" = "solid"
+    )
+  ) +
+  scale_alpha_manual(
+    values = c(
+      "Total population" = 0.7,
+      "Wild type" = 1,
+      "Resistant" = 1,
+      "Lysogenic" = 1,
+      "Phages" = 1
+    )
+  ) +
+  labs(
+    x = "Generation",
+    y = "Population size",
+    colour = NULL,
+    linetype = NULL,
+    alpha = NULL
+  ) +
+  ggtitle("Evolutionary rescue with no survival strategy") +
+  theme_classic() +
+  theme(
+    legend.position = "right",
+    legend.justification = "center",
+    legend.background = element_blank()
+  )
+
+``` 
+
+*Supplementary Figure 2: Population trajectories with no survival strategies with set model parameters (see model overview) and `lysogen_prob` = 0 and `mut_rate = 0`*
+
+
+```{r No resistance, echo =F}
+# simulation and plotting with only one survival strategy: lysogeny (no resistance)
+
+max_gen <- 2000
+N_init_wt <- 100
+N_init_r <- 0
+N_init_l <- 0
+N_init_p <- 1
+infection_prob <- 0.01
+lysogen_prob <- 0.002
+growth_rate <- 1.5
+mut_rate <- 0
+K <- 2000
+P_decline <- -0.5
+P_prod <- 1.5
+
+# set parameters to vary
+induction_prob = 0.35
+cost_r = 0
+
+
+set.seed(10)
+# create your simulation data
+output <- simulate_pop(N_init_wt, N_init_r, N_init_l, N_init_p, infection_prob, induction_prob, lysogen_prob, mut_rate, cost_r, growth_rate, max_gen, K, P_decline, P_prod)
+# show the last few lines of the data table
+print(tail(output))
+
+
+# plot the output - note that the plot range and the x axis have to be adjusted based on the length of the table
+# determine x axis range 
+x_range <- 0:(length(output[,1])-1)
+
+# Convert simulation output into a data frame
+output_df <- as.data.frame(output) %>%
+  mutate(Generation = as.numeric(rownames(output))) %>%
+  mutate(Total = wt + r + l) 
+
+# Reshape data for ggplot
+plot_data <- output_df %>%
+  pivot_longer(
+    cols = c(Total, wt, r, l, p),
+    names_to = "Population",
+    values_to = "Size"
+  ) %>%
+  mutate(
+    Population = factor(
+      Population,
+      levels = c("Total", "wt", "r", "l", "p"),
+      labels = c(
+        "Total population",
+        "Wild type",
+        "Resistant",
+        "Lysogenic",
+        "Phages"
+      )
+    )
+  )
+
+
+# Plot population trajectories
+ggplot(
+  plot_data,
+  aes(
+    x = Generation,
+    y = Size,
+    colour = Population,
+    linetype = Population,
+    alpha = Population
+  )
+) +
+ geom_line(linewidth = 0.4) +
+  scale_colour_manual(
+    values = c(
+      "Total population" = "black",
+      "Wild type" = "#E69F00",
+      "Resistant" = "#0072B2",
+      "Lysogenic" = "#009E73",
+      "Phages" = "#CC79A7"
+    )
+  ) +
+  scale_linetype_manual(
+    values = c(
+      "Total population" = "dotted",
+      "Wild type" = "solid",
+      "Resistant" = "solid",
+      "Lysogenic" = "solid",
+      "Phages" = "solid"
+    )
+  ) +
+  scale_alpha_manual(
+    values = c(
+      "Total population" = 0.7,
+      "Wild type" = 1,
+      "Resistant" = 1,
+      "Lysogenic" = 1,
+      "Phages" = 1
+    )
+  ) +
+  labs(
+    x = "Generation",
+    y = "Population size",
+    colour = NULL,
+    linetype = NULL,
+    alpha = NULL
+  ) +
+  ggtitle("Evolutionary rescue with only lysogenic bacteria") +
+  theme_classic() +
+  theme(
+    legend.position = "right",
+    legend.justification = "center",
+    legend.background = element_blank()
+  )
+```
+
+*Supplementary Figure 3: Population trajectories with only lysogenic strategy with set model parameters (see model overview), `lysogen_prob` = 0.002, `mut_rate` = 0 and `induction_prob` = 0.35*
+
+
+```{r No lysogeny, echo =F}
+# simulation and plotting with only one survival strategy: resistance (no lysogeny)
+
+
+max_gen <- 2000
+
+N_init_wt <- 100
+N_init_r <- 0
+N_init_l <- 0
+N_init_p <- 1
+infection_prob <- 0.01
+lysogen_prob <- 0.002
+growth_rate <- 1.5
+mut_rate <- 0.002 
+K <- 2000
+P_decline <- -0.5
+P_prod <- 1.5
+
+# set parameters to vary
+induction_prob = 0.35
+cost_r = 0.35
+
+set.seed(10)
+# create your simulation data
+output <- simulate_pop(N_init_wt, N_init_r, N_init_l, N_init_p, infection_prob, induction_prob, lysogen_prob, mut_rate, cost_r, growth_rate, max_gen, K, P_decline, P_prod)
+# show the last few lines of the data table
+print(tail(output))
+
+
+# plot the output - note that the plot range and the x axis have to be adjusted based on the length of the table
+# determine x axis range 
+x_range <- 0:(length(output[,1])-1)
+
+
+# Convert simulation output into a data frame
+output_df <- as.data.frame(output) %>%
+  mutate(Generation = as.numeric(rownames(output))) %>%
+  mutate(Total = wt + r + l) 
+
+# Reshape data for ggplot
+plot_data <- output_df %>%
+  pivot_longer(
+    cols = c(Total, wt, r, l, p),
+    names_to = "Population",
+    values_to = "Size"
+  ) %>%
+  mutate(
+    Population = factor(
+      Population,
+      levels = c("Total", "wt", "r", "l", "p"),
+      labels = c(
+        "Total population",
+        "Wild type",
+        "Resistant",
+        "Lysogenic",
+        "Phages"
+      )
+    )
+  )
+
+
+# Plot population trajectories
+ggplot(
+  plot_data,
+  aes(
+    x = Generation,
+    y = Size,
+    colour = Population,
+    linetype = Population,
+    alpha = Population
+  )
+) +
+  geom_line(linewidth = 0.4) +
+  scale_colour_manual(
+    values = c(
+      "Total population" = "black",
+      "Wild type" = "#E69F00",
+      "Resistant" = "#0072B2",
+      "Lysogenic" = "#009E73",
+      "Phages" = "#CC79A7"
+    )
+  ) +
+  scale_linetype_manual(
+    values = c(
+      "Total population" = "dotted",
+      "Wild type" = "solid",
+      "Resistant" = "solid",
+      "Lysogenic" = "solid",
+      "Phages" = "solid"
+    )
+  ) +
+  scale_alpha_manual(
+    values = c(
+      "Total population" = 0.7,
+      "Wild type" = 1,
+      "Resistant" = 1,
+      "Lysogenic" = 1,
+      "Phages" = 1
+    )
+  ) +
+  labs(
+    x = "Generation",
+    y = "Population size",
+    colour = NULL,
+    linetype = NULL,
+    alpha = NULL
+  ) +
+  ggtitle("Evolutionary rescue with only resistant bacteria") +
+  theme_classic() +
+  theme(
+    legend.position = "right",
+    legend.justification = "center",
+    legend.background = element_blank()
+  )
+
+```
+
+*Supplementary Figure 4: Population trajectories with only resistant strategy with set model parameters (see model overview), `lysogen_prob` = 0, `mut_rate` = 0.002 and `cost_r` = 0.35*
+
+
+
+### Analysis: Effects of induction_prob and cost_r
+Here, we analyze the effects of varying induction probability (~ lysogen death rate) and the cost of r (~ resistant death rate) on three possible outcomes:
+
+1. Extinction: the total bacterial population (wt + r + l) goes extinct
+2. Resistance: wt and l go extinct, r remains
+3. Lysogen: wt and r go extinct, l remains
+
+Coexistence is a category in our analysis when neither l or r have gone extinct by the end of the simulation (after `t_max`generations). Running these cases with longer `t_max`showed that there is in fact no equilibrium between r and l but one of the two was declining and had not yet reached a population size of 0 by the end of the simulation. This case is termed "temporary coexistence". 
+
+The proportion of outcomes is plotted as barplots for varying induction probability. The corresponding barplot for varying cost of r is shown in Figure 6 of the main text.
 
 ```{r induction_prob iterations, echo = F}
 # set some parameters to fixed values
@@ -1228,7 +1211,9 @@ ggplot(props, aes(x = induction_prob, y = prop, fill = outcome)) +
   ggtitle("Outcome proportions with different induction_prob")
 
 ```
-*Supplementary Figure 6: Barplot of outcome proportions of 100 simulation replicates with varying `induction_prob`, `cost_r`= 0.1 and set model parameters (see model overview)*
+
+*Supplementary Figure 5: Barplot of outcome proportions of 100 simulation replicates with varying `induction_prob`, `cost_r`= 0.1 and set model parameters (see model overview)*
+
 
 ### Effects of varying cost_r with no lysogeny
 ```{r cost_r iterations NO L, echo = F}
@@ -1372,7 +1357,9 @@ ggplot(props, aes(x = cost_r, y = prop, fill = outcome)) +
   theme_minimal() +
   ggtitle("Outcome proportions with different cost_r and NO LYSOGENY")
 ```
-*Supplementary Figure 7: Barplot of outcome proportions of 100 simulation replicates with varying `cost_r`, no lysogeny (`lysogen_prob` = 0) and set model parameters (see model overview)*
+
+*Supplementary Figure 6: Barplot of outcome proportions of 100 simulation replicates with varying `cost_r`, no lysogeny (`lysogen_prob` = 0) and set model parameters (see model overview)*
+
 
 ### Effect of varying induction_prob with no resistance
 ```{r induction_prob iterations NO R, echo = F}
@@ -1517,5 +1504,73 @@ ggplot(props, aes(x = induction_prob, y = prop, fill = outcome)) +
   ggtitle("Outcome proportions with different induction_prob and NO RESISTANCE")
 
 ```
-*Supplementary Figure 8: Barplot of outcome proportions of 100 simulation replicates with varying `induction_prob`, no resistance (`mut_rate` = 0) and set model parameters (see model overview)*
 
+*Supplementary Figure 7: Barplot of outcome proportions of 100 simulation replicates with varying `induction_prob`, no resistance (`mut_rate` = 0) and set model parameters (see model overview)*
+
+
+### Additional heat maps of the combined analysis
+These heat maps belong to the combined grid analysis shown in the main text (Figures 2 & 3). The data are read in again because "outcomes" is overwritten by the simulations above.
+
+```{r heat maps prep supplementary, echo = F}
+# get data
+# if you want to access data from an earlier simulation, set the date to the day it was created (format YYYY-MM-DD), otherwise use Sys.date()
+date = "2026-11-04"
+outcomes = read.csv(paste(your_pathname, "/data/combined_r_l_data", date, ".csv", sep = ""))
+
+## plot outcomes
+
+# treat parameters as a categorical axis
+outcomes$induction_prob <- factor(outcomes$induction_prob)
+outcomes$cost_r = factor(outcomes$cost_r)
+
+# fix the order of the five outcomes so colours are consistent
+outcomes$outcome <- factor(outcomes$outcome,
+  levels = c("extinction", "wt wins", "r wins", "l wins", "temporary coexistence"))
+```
+
+```{r heat map extinction, echo = F}
+## heat map for extinction (Claude)
+
+# extinction probability per parameter combination
+ext <- outcomes %>%
+  group_by(induction_prob, cost_r) %>%
+  summarise(p_ext = mean(outcome == "extinction"),
+            n_runs = n(),
+            .groups = "drop")
+
+ggplot(ext, aes(x = cost_r, y = induction_prob, fill = p_ext)) +
+  geom_tile(colour = "white", linewidth = 0.8) +
+  geom_text(aes(label = sprintf("%.2f", p_ext)), size = 4) +
+  scale_fill_gradient(low = "white", high = "#D55E00",
+                      limits = c(0, 1), name = "P(extinction)") +
+  labs(x = "Cost of resistance (cost_r)",
+       y = "Induction probability (induction_prob)") +
+  coord_equal() +
+  theme_minimal() +
+  ggtitle("Probability of extinction")
+```
+
+*Supplementary Figure 8: Heat map of probability of extinction of the total population*
+
+```{r heat map survival/rescue, echo = F}
+## heat map for survival/rescue of total population
+# survival probability per parameter combination
+surv = outcomes %>%
+  group_by(induction_prob, cost_r) %>%
+  summarise(p_surv = mean(outcome != "extinction"),
+            n_runs = n(),
+            .groups = "drop")
+
+ggplot(surv, aes(x = cost_r, y = induction_prob, fill = p_surv)) +
+  geom_tile(colour = "white", linewidth = 0.8) +
+  geom_text(aes(label = sprintf("%.2f", p_surv)), size = 4) +
+  scale_fill_gradient(low = "white", high = "purple",
+                      limits = c(0, 1), name = "P(rescue)") +
+  labs(x = "Cost of resistance (cost_r)",
+       y = "Induction probability (induction_prob)") +
+  coord_equal() +
+  theme_minimal() +
+  ggtitle("Probability of rescue of total population")
+```
+
+*Supplementary Figure 9: Heat map of probability of survival of the total population (= 1 - extinction; this counts every outcome except extinction, including wt wins and temporary coexistence)*
