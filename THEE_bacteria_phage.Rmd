@@ -526,7 +526,7 @@ The saved data from the simulations run above is read in and visualized. For the
 ```{r heat maps prep, echo = F}
 # get data
 # if you want to access data from an earlier simulation, set the date to the day it was created (format YYYY-MM-DD), otherwise use Sys.date()
-date = "2026-11-04"
+date = Sys.date()
 outcomes = read.csv(paste(your_pathname, "/data/combined_r_l_data", date, ".csv", sep = ""))
 
 ## plot outcomes
@@ -594,7 +594,7 @@ ggplot(res, aes(x = cost_r, y = induction_prob, fill = p_res)) +
 
 # get data
 # if you want to access data from an earlier simulation, set the date to the day it was created (format YYYY-MM-DD), otherwise use Sys.Date()
-date = "2026-11-18"
+date = Sys.date()
 outcomes = read.csv(paste(your_pathname, "/data/cost_r_iterations", date, ".csv", sep = ""))
 
 # treat cost_r as a categorical axis 
@@ -1290,7 +1290,7 @@ write.csv(outcomes, paste(your_pathname, "/data/induction_prob_iterations", Sys.
 
 # get data
 # if you want to access data from an earlier simulation, set the date to the day it was created (format YYYY-MM-DD), otherwise use Sys.Date()
-date = "2026-11-18"
+date = Sys.date()
 outcomes = read.csv(paste(your_pathname, "/data/induction_prob_iterations", date, ".csv", sep = ""))
 
 # treat induction_prob as a categorical axis
@@ -1438,7 +1438,7 @@ write.csv(outcomes, paste(your_pathname, "/data/cost_r_iterations_NO_L", Sys.Dat
 
 # get data
 # if you want to access data from an earlier simulation, set the date to the day it was created (format YYYY-MM-DD), otherwise use Sys.date()
-date = "2026-11-04"
+date = Sys.date()
 outcomes = read.csv(paste(your_pathname, "/data/cost_r_iterations_NO_L", date, ".csv", sep = ""))
 
 # treat cost_r as a categorical axis
@@ -1585,7 +1585,7 @@ write.csv(outcomes, paste(your_pathname, "/data/induction_prob_iterations_NO_R",
 
 # get data
 # if you want to access data from an earlier simulation, set the date to the day it was created (format YYYY-MM-DD), otherwise use Sys.date()
-date = "2026-11-04"
+date = Sys.date()
 outcomes = read.csv(paste(your_pathname, "/data/induction_prob_iterations_NO_R", date, ".csv", sep = ""))
 
 # treat induction_prob as a categorical axis
@@ -1641,7 +1641,7 @@ These heat maps belong to the combined grid analysis shown in the main text (Fig
 ```{r heat maps prep supplementary, echo = F}
 # get data
 # if you want to access data from an earlier simulation, set the date to the day it was created (format YYYY-MM-DD), otherwise use Sys.date()
-date = "2026-11-04"
+date = Sys.date()
 outcomes = read.csv(paste(your_pathname, "/data/combined_r_l_data", date, ".csv", sep = ""))
 
 ## plot outcomes
@@ -1802,7 +1802,7 @@ write.csv(outcomes, paste(your_pathname, "/data/cost_r_zoom_iterations", Sys.Dat
 
 # get data
 # if you want to access data from an earlier simulation, set the date to the day it was created (format YYYY-MM-DD), otherwise use Sys.Date()
-date = "2026-11-22"
+date = Sys.date()
 outcomes = read.csv(paste(your_pathname, "/data/cost_r_zoom_iterations", date, ".csv", sep = ""))
 
 # treat cost_r as a categorical axis 
@@ -1947,7 +1947,7 @@ write.csv(outcomes, paste(your_pathname, "/data/induction_prob_zoom_iterations",
 
 # get data
 # if you want to access data from an earlier simulation, set the date to the day it was created (format YYYY-MM-DD), otherwise use Sys.Date()
-date = "2026-11-22"
+date = Sys.date()
 outcomes = read.csv(paste(your_pathname, "/data/induction_prob_zoom_iterations", date, ".csv", sep = ""))
 
 # treat induction_prob as a categorical axis
