@@ -75,8 +75,8 @@ library(tibble)
 wrap_title <- function(x, width = 60) paste(strwrap(x, width = width), collapse = "\n")
 
 # change this to where you have saved the repository
-your_pathname = "/Users/macbookair/Desktop/THEE-Coevolution-HGT"
-#your_pathname = "/Users/aylin/Documents/GitHub/THEE-Coevolution-HGT"
+#your_pathname = "/Users/macbookair/Desktop/THEE-Coevolution-HGT"
+your_pathname = "/Users/aylin/Documents/GitHub/THEE-Coevolution-HGT"
 
 ```
 
@@ -526,7 +526,7 @@ The saved data from the simulations run above is read in and visualized. For the
 ```{r heat maps prep, echo = F}
 # get data
 # if you want to access data from an earlier simulation, set the date to the day it was created (format YYYY-MM-DD), otherwise use Sys.date()
-date = Sys.date()
+date = Sys.Date()
 outcomes = read.csv(paste(your_pathname, "/data/combined_r_l_data", date, ".csv", sep = ""))
 
 ## plot outcomes
@@ -594,7 +594,7 @@ ggplot(res, aes(x = cost_r, y = induction_prob, fill = p_res)) +
 
 # get data
 # if you want to access data from an earlier simulation, set the date to the day it was created (format YYYY-MM-DD), otherwise use Sys.Date()
-date = Sys.date()
+date = Sys.Date()
 outcomes = read.csv(paste(your_pathname, "/data/cost_r_iterations", date, ".csv", sep = ""))
 
 # treat cost_r as a categorical axis 
@@ -1290,7 +1290,7 @@ write.csv(outcomes, paste(your_pathname, "/data/induction_prob_iterations", Sys.
 
 # get data
 # if you want to access data from an earlier simulation, set the date to the day it was created (format YYYY-MM-DD), otherwise use Sys.Date()
-date = Sys.date()
+date = Sys.Date()
 outcomes = read.csv(paste(your_pathname, "/data/induction_prob_iterations", date, ".csv", sep = ""))
 
 # treat induction_prob as a categorical axis
@@ -1438,7 +1438,7 @@ write.csv(outcomes, paste(your_pathname, "/data/cost_r_iterations_NO_L", Sys.Dat
 
 # get data
 # if you want to access data from an earlier simulation, set the date to the day it was created (format YYYY-MM-DD), otherwise use Sys.date()
-date = Sys.date()
+date = Sys.Date()
 outcomes = read.csv(paste(your_pathname, "/data/cost_r_iterations_NO_L", date, ".csv", sep = ""))
 
 # treat cost_r as a categorical axis
@@ -1585,7 +1585,7 @@ write.csv(outcomes, paste(your_pathname, "/data/induction_prob_iterations_NO_R",
 
 # get data
 # if you want to access data from an earlier simulation, set the date to the day it was created (format YYYY-MM-DD), otherwise use Sys.date()
-date = Sys.date()
+date = Sys.Date()
 outcomes = read.csv(paste(your_pathname, "/data/induction_prob_iterations_NO_R", date, ".csv", sep = ""))
 
 # treat induction_prob as a categorical axis
@@ -1641,7 +1641,7 @@ These heat maps belong to the combined grid analysis shown in the main text (Fig
 ```{r heat maps prep supplementary, echo = F}
 # get data
 # if you want to access data from an earlier simulation, set the date to the day it was created (format YYYY-MM-DD), otherwise use Sys.date()
-date = Sys.date()
+date = Sys.Date()
 outcomes = read.csv(paste(your_pathname, "/data/combined_r_l_data", date, ".csv", sep = ""))
 
 ## plot outcomes
@@ -1802,7 +1802,7 @@ write.csv(outcomes, paste(your_pathname, "/data/cost_r_zoom_iterations", Sys.Dat
 
 # get data
 # if you want to access data from an earlier simulation, set the date to the day it was created (format YYYY-MM-DD), otherwise use Sys.Date()
-date = Sys.date()
+date = Sys.Date()
 outcomes = read.csv(paste(your_pathname, "/data/cost_r_zoom_iterations", date, ".csv", sep = ""))
 
 # treat cost_r as a categorical axis 
@@ -1850,7 +1850,7 @@ ggplot(props, aes(x = cost_r, y = prop, fill = outcome)) +
 *Supplementary Figure 10: Barplot of outcome proportions for varying `cost_r` and fixed `induction_prob`. 100 simulations for each `cost_r` increasing from 0.3 to 0.5 (by steps of 0.02), a fixed `induction_prob`= 0.46 and set model parameters (List of variables and parameters in 2. Model and Methods) were run and the outcomes recorded. The percentage of each outcome for each value of `cost_r` is visualized.*
 
 
-```{r induction_prob zoom iterations, echo = F, eval = }
+```{r induction_prob zoom iterations, echo = F, eval = T}
 # set some parameters to fixed values
 # set t_max to a value to be used throughout
 max_gen <- 2000
@@ -1947,7 +1947,7 @@ write.csv(outcomes, paste(your_pathname, "/data/induction_prob_zoom_iterations",
 
 # get data
 # if you want to access data from an earlier simulation, set the date to the day it was created (format YYYY-MM-DD), otherwise use Sys.Date()
-date = Sys.date()
+date = Sys.Date()
 outcomes = read.csv(paste(your_pathname, "/data/induction_prob_zoom_iterations", date, ".csv", sep = ""))
 
 # treat induction_prob as a categorical axis
