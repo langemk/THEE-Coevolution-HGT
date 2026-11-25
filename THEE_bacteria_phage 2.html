@@ -1683,17 +1683,17 @@ and the more phages there are, the higher the death rate of the
 wild-type. The following are the two possible survival strategies that
 the bacteria population have:</p>
 <ol style="list-style-type: decimal">
-<li><p><strong>Resistance</strong> (slow but safe): wt offspring have a
-resistance mutation at a low rate (<code>mut_rate</code>). Resistant
-bacteria are immune to the phages and are not killed by infection.
-Resistance is permanent, but it comes with a fitness cost
-(<code>cost_r</code>) that reduces their offspring number. This strategy
-is phage-independent.</p></li>
-<li><p><strong>Lysogen</strong> (fast but risky): wt bacteria can enter
-a lysogenic relationship with the phage (<code>lysogen_prob</code>),
-which becomes more likely the more phages are present. Lysogenic
-bacteria carry a dormant phage and therefore cannot die from infection.
-However, they can later be killed by induction of the dormant phage
+<li><p>Resistance (slow but safe): wt offspring have a resistance
+mutation at a low rate (<code>mut_rate</code>). Resistant bacteria are
+immune to the phages and are not killed by infection. Resistance is
+permanent, but it comes with a fitness cost (<code>cost_r</code>) that
+reduces their offspring number. This strategy is
+phage-independent.</p></li>
+<li><p>Lysogen (fast but risky): wt bacteria can enter a lysogenic
+relationship with the phage (<code>lysogen_prob</code>), which becomes
+more likely the more phages are present. Lysogenic bacteria carry a
+dormant phage and therefore cannot die from infection. However, they can
+later be killed by induction of the dormant phage
 (<code>induction_prob</code>), which releases new phages into the
 environment. This strategy is phage-dependent.</p></li>
 </ol>
@@ -1717,8 +1717,7 @@ arise from wt bacteria through mutations or integration (i.e., becoming
 a lysogen) and then spread before the total bacterial population goes
 extinct. Rescue means that the bacterial population (be it wt, resistant
 or lysogen) recovers and persists.</p>
-<p>The following are the <strong>three possible outcomes</strong> of our
-model:</p>
+<p>The following are the three possible outcomes of our model:</p>
 <ol style="list-style-type: decimal">
 <li><p>Extinction</p></li>
 <li><p>Only lysogen persists</p></li>
