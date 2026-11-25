@@ -35,8 +35,11 @@ Figure 1 shows a schematic of one generation. Not depicted are the rates and pro
 All bacterial types grow with a shared carrying capacity (`K`) and the phage population is updated each generation from phage decline (`P_decline`) and from phage production at infection and induction events (`P_prod`). Resistant and lysogenic bacteria start at a population number of 0, so they have to arise from wt bacteria through mutations or integration (i.e., becoming a lysogen) and then spread before the total bacterial population goes extinct. Rescue means that the bacterial population (be it wt, resistant or lysogen) recovers and persists. 
 
 The following are the three possible outcomes of our model:
+
 1. Extinction
+
 2. Only lysogen persists
+
 3. Only resistance persists
 
 ### List of variables and parameters
@@ -75,8 +78,8 @@ library(tibble)
 wrap_title <- function(x, width = 60) paste(strwrap(x, width = width), collapse = "\n")
 
 # change this to where you have saved the repository
-#your_pathname = "/Users/macbookair/Desktop/THEE-Coevolution-HGT"
-your_pathname = "/Users/aylin/Documents/GitHub/THEE-Coevolution-HGT"
+your_pathname = "/Users/macbookair/Desktop/THEE-Coevolution-HGT"
+#your_pathname = "/Users/aylin/Documents/GitHub/THEE-Coevolution-HGT"
 
 ```
 
@@ -326,7 +329,7 @@ The outcome "Temporary coexistence" is a category in our analysis when neither l
 The outcome "Wildtype" (i.e., the survival of the wild-type population) is not possible with the set parameters. The outcome "Wildtype" is however included in the code to enable simulations with parameters where the wild-type population could subsist.
 
 
-```{r cost_r and induction_prob grid simulation, echo = F, eval = T}
+```{r cost_r and induction_prob grid simulation, echo = F, eval = F}
 # set some parameters to fixed values
 # set t_max to a value to be used throughout
 max_gen <- 2000
@@ -428,7 +431,7 @@ All simulations are run with a seed set at 10 to ensure reproducibility.
 
 The tables are saved as csv files so that the plots below can be recreated without re-running the (slow) simulations.
 
-```{r cost_r iterations, echo = F, eval = T}
+```{r cost_r iterations, echo = F, eval = F}
 # set some parameters to fixed values
 # set t_max to a value to be used throughout
 max_gen <- 2000
@@ -526,7 +529,7 @@ The saved data from the simulations run above is read in and visualized. For the
 ```{r heat maps prep, echo = F}
 # get data
 # if you want to access data from an earlier simulation, set the date to the day it was created (format YYYY-MM-DD), otherwise use Sys.date()
-date = Sys.Date()
+date = "2026-11-22"
 outcomes = read.csv(paste(your_pathname, "/data/combined_r_l_data", date, ".csv", sep = ""))
 
 ## plot outcomes
@@ -594,7 +597,7 @@ ggplot(res, aes(x = cost_r, y = induction_prob, fill = p_res)) +
 
 # get data
 # if you want to access data from an earlier simulation, set the date to the day it was created (format YYYY-MM-DD), otherwise use Sys.Date()
-date = Sys.Date()
+date = "2026-11-22"
 outcomes = read.csv(paste(your_pathname, "/data/cost_r_iterations", date, ".csv", sep = ""))
 
 # treat cost_r as a categorical axis 
@@ -640,14 +643,15 @@ ggplot(props, aes(x = cost_r, y = prop, fill = outcome)) +
 ```
 *Figure 5: Barplot of outcome proportions for varying `cost_r` and fixed `induction_prob`. 100 simulations for each `cost_r` increasing from 0.05 to 0.95 (by steps of 0.15), a fixed `induction_prob`= 0.46 and set model parameters (List of variables and parameters in 2. Model and Methods) were run and the outcomes recorded. The percentage of each outcome for each value of `cost_r` is shown.*
 
-Looking at Fig. 3 and 4., two different behaviors of the two strategies become apparent: The lysogen outcome probability is constantly comparatively high (no less than 50% of outcomes, and up to 100% of outcomes for lower induction probabilities) and abruptly decreases to 0% above a threshold of about 0.65 (dropping from 52% to 0% within a 0.03 increase of `induction_prob`; Supplementary Figure 11). The resistant outcome probability is comparatively lower (not more than 39% of outcomes) and has a gradual decrease with increasing cost of r (decreasing from 47% to 0% over a 0.18 increase of `cost_r`; Supplementary Figure 10). In addition, there is also an effect of  increasing `induction_prob`: the higher `cost_r`, the higher `induction_prob` (i.e., the cost for the lysogen) needs to be for the resistant strategy to have a chance to establish itself (although never more than in 39% of cases). This makes for the diagonal pattern in Figure 4. Combined, this results in a survivability heatmap (Supplementary Figure 9) that has a somewhat gradual decrease from left to right (increasing `cost_r`) but quite an abrupt drop from bottom to top (increasing `induction_prob`). 
+Looking at Fig. 3 and 4., two different behaviors of the two strategies become apparent: The lysogen outcome probability is constantly comparatively high (100% of outcomes in 15/21 tiles where lysogen is an outcome,  no less than 27% overall) and abruptly decreases to 0% above a threshold between 0.35 and 0.5 in Figure 3 (dropping from 23% to 0% within a 0.02 increase of `induction_prob`; Supplementary Figure 11). The resistant outcome probability is comparatively lower (not more than 77% of outcomes) and has a gradual decrease with increasing cost of r (gradually decreasing from 39% to 0% over a 0.1 increase of `cost_r`; Supplementary Figure 10). In addition, there is also an effect of  `induction_prob` on the resistant outcomes: the higher `cost_r`, the higher `induction_prob` (i.e., the cost for the lysogen) needs to be for the resistant strategy to have a chance to establish itself (although never more than in 77% of cases, and decreasing from left to right). This makes for the diagonal pattern in Figure 4. Combined, this results in a survivability heatmap (Supplementary Figure 9) that has a  gradual decrease from left to right (increasing `cost_r`) above the induction threshold but quite an abrupt drop from bottom to top (increasing `induction_prob`). 
 
-When looking at the distribution of outcomes when only one variable is varied, the limitations of the resistant strategy become apparent. When only the induction probability is increased (`cost_r` fixed at 0.1), the proportions of resistant outcomes fluctuates between 28 and 42%, while the extinction probability increases from 0 to 69% (Supplementary Figure 11). This when the fitness cost for resistance is comparatively low, i.e., the resistant would have an advantage. With increasing cost of r (`induction_prob` constant at 0.46), the resistant outcomes decrease gradually while the proportion of lysogen increases. The extinction proportion only mildly increases from 12% to a maximum of 30% (Supplementary Figure 10). With no lysogen outcomes possible, the resistant to extinction outcomes stabilize at 31-33% to 67-69% (Supplementary Figure 5 and Supplementary Figure 11). With no resistant outcomes possible, the lysogen to extinction outcomes stabilize at 70-79% to 21-30% (Figure 5 and Supplementary Figure 10)
+When looking at the distribution of outcomes when only one variable is varied, the limitations of the resistant strategy become apparent. When only the induction probability is increased (`cost_r` fixed at 0.1), the proportions of resistant outcomes fluctuates between 73 and 59%, while the extinction probability increases from 0 to 41% (Supplementary Figure 11). With increasing cost of r (`induction_prob` constant at 0.46), the resistant outcomes decrease gradually while the proportion of lysogen increases (from 37% to a maximum of 76%; Supplementary Figure 10). The extinction proportion only mildly increases from 12% to a maximum of 30% (Supplementary Figure 10). With no lysogen outcomes possible, the resistant to extinction outcomes stabilize at 59-71% to 29-41% (Supplementary Figure 5 and Supplementary Figure 11). With no resistant outcomes possible, the lysogen to extinction outcomes stabilize at 70-79% to 21-30% (Figure 5 and Supplementary Figure 10)
 
 ## 5. Discussion
 
-The rescuing probability of the resistant strategy seems to be more density-dependent than the lysogen strategy: its outcome probability is not only dependent on the cost of r but also the induction probability, i.e., the fitness of the lysogen. However, the resistant outcomes are limited to a maximum of 39% even when the cost for lysogeny is high; the majority of outcomes end in extinction. In contrast, the lysogen strategy success is more dependent on its own fitness: above a certain threshold, it performs well throughout (more than 50% of outcomes). Under this fitness threshold, the lysogen outcome probability drops to 0 (see Figure 3 and Supplementary Figure 5). Overall, the lysogen strategy performs much better: under its fitness threshold, it dominates regardless of how low the fitness cost is for the resistant strategy.
-This might be due to the differences in phage dependency: the resistant strategy is phage-independent and arises through mutation (at a set mutation rate). The number of offspring is stochastic depending on the mutation rate. The lysogen strategy depends on a probability of integration which is multiplied by the phage population, giving the lysogen population a "boost". Up to a certain threshold of induction probability, the lysogen have a positive feedback loop: with every induction (i.e., death of a lysogen), more phages are produced which in turn increase the integration and hence creation of new lysogens. This removes the stochastic aspect and makes the growth of the lysogen population deterministic until a threshold where the integration probability/fitness cost becomes too high.
+The rescuing probability by the resistant strategy seems to be more density-dependent than the lysogen strategy: its outcome probability is not only dependent on the cost of r but also the induction probability, i.e., the fitness of the lysogen. The higher the cost for resistant, the higher the fitness cost for lysogen need to be for the resistant to have a chance to establish. However, the resistant outcomes are limited to a maximum of 77% even when the cost for lysogeny is high; some outcomes end in extinction. A higher fitness cost for lysogen does not come at an advantage for  resistant but results in increased extinction.
+In contrast, the lysogen strategy success is more dependent on its own fitness: above a certain threshold, it performs well throughout (more than 50% of outcomes). Under this fitness threshold, the lysogen outcome probability drops to 0 (see Figure 3 and Supplementary Figure 5). Overall, the lysogen strategy performs much better: under its fitness threshold, it dominates regardless of how low the fitness cost is for the resistant strategy.
+This might be due to the differences in phage dependency: the resistant strategy is phage-independent and arises through mutation (at a set mutation rate). The number of offspring is stochastic depending on the mutation rate. The lysogen strategy depends on a probability of integration which is multiplied by the phage population, giving the lysogen population a "boost". Up to a certain threshold of induction probability, the lysogen have a positive feedback loop: with every induction (i.e., death of a lysogen), more phages are produced which in turn increase the integration and hence creation of new lysogens. This removes the stochastic aspect and makes the growth of the lysogen population deterministic until a threshold where the integration probability becomes too high.
 
 ### Implications for phage therapy
 Phage therapy fails when the pathogen is rescued by adaptation, so it can be analysed like any other case of evolutionary rescue. Alexander et al. (2014) highlight that the dynamics are very similar to those in conservation biology and that rescue theory should be applied in medicine as well. In our model, rescue depends on how often a strategy arises (mutation or integration), on its fitness cost and on stochastic loss while rare. Three implications follow. They are hypotheses from a simplified model, not predictions.
@@ -1193,7 +1197,7 @@ ggplot(
 #### Effects of induction_prob only
 We analyze the effects of varying induction probability (~ lysogen death rate) and the cost of r (~ resistant death rate) on the outcomes described above (see *3. Analysis*). Here, we vary `induction_prob` only (0.05 to 0.95 in steps of 0.15) with `cost_r` at a fixed value of 0.1. The outcome table is saved as a csv in the data folder.The corresponding barplot for varying `cost_r` is shown in Figure 4 of the main text.
 
-```{r induction_prob iterations, echo = F, eval = T}
+```{r induction_prob iterations, echo = F, eval = F}
 # set some parameters to fixed values
 # set t_max to a value to be used throughout
 max_gen <- 2000
@@ -1290,7 +1294,7 @@ write.csv(outcomes, paste(your_pathname, "/data/induction_prob_iterations", Sys.
 
 # get data
 # if you want to access data from an earlier simulation, set the date to the day it was created (format YYYY-MM-DD), otherwise use Sys.Date()
-date = Sys.Date()
+date = "2026-11-22"
 outcomes = read.csv(paste(your_pathname, "/data/induction_prob_iterations", date, ".csv", sep = ""))
 
 # treat induction_prob as a categorical axis
@@ -1341,7 +1345,7 @@ ggplot(props, aes(x = induction_prob, y = prop, fill = outcome)) +
 
 
 #### Effects of varying cost_r with no lysogeny
-```{r cost_r iterations NO L, echo = F, eval = T}
+```{r cost_r iterations NO L, echo = F, eval = F}
 # set some parameters to fixed values
 # set t_max to a value to be used throughout
 max_gen <- 2000
@@ -1438,7 +1442,7 @@ write.csv(outcomes, paste(your_pathname, "/data/cost_r_iterations_NO_L", Sys.Dat
 
 # get data
 # if you want to access data from an earlier simulation, set the date to the day it was created (format YYYY-MM-DD), otherwise use Sys.date()
-date = Sys.Date()
+date = "2026-11-22"
 outcomes = read.csv(paste(your_pathname, "/data/cost_r_iterations_NO_L", date, ".csv", sep = ""))
 
 # treat cost_r as a categorical axis
@@ -1488,7 +1492,7 @@ ggplot(props, aes(x = cost_r, y = prop, fill = outcome)) +
 
 
 #### Effect of varying induction_prob with no resistance
-```{r induction_prob iterations NO R, echo = F, eval = T}
+```{r induction_prob iterations NO R, echo = F, eval = F}
 # set some parameters to fixed values
 # set t_max to a value to be used throughout
 max_gen <- 2000
@@ -1585,7 +1589,7 @@ write.csv(outcomes, paste(your_pathname, "/data/induction_prob_iterations_NO_R",
 
 # get data
 # if you want to access data from an earlier simulation, set the date to the day it was created (format YYYY-MM-DD), otherwise use Sys.date()
-date = Sys.Date()
+date = "2026-11-22"
 outcomes = read.csv(paste(your_pathname, "/data/induction_prob_iterations_NO_R", date, ".csv", sep = ""))
 
 # treat induction_prob as a categorical axis
@@ -1641,7 +1645,7 @@ These heat maps belong to the combined grid analysis shown in the main text (Fig
 ```{r heat maps prep supplementary, echo = F}
 # get data
 # if you want to access data from an earlier simulation, set the date to the day it was created (format YYYY-MM-DD), otherwise use Sys.date()
-date = Sys.Date()
+date = "2026-11-22"
 outcomes = read.csv(paste(your_pathname, "/data/combined_r_l_data", date, ".csv", sep = ""))
 
 ## plot outcomes
@@ -1706,7 +1710,7 @@ ggplot(surv, aes(x = cost_r, y = induction_prob, fill = p_surv)) +
 
 ### 9.4. Supplementary "zoom-in" into varying cost-r and induction_prob
 
-```{r cost_r zoom iterations, echo = F, eval = T}
+```{r cost_r zoom iterations, echo = F, eval = F}
 # set some parameters to fixed values
 # set t_max to a value to be used throughout
 max_gen <- 2000
@@ -1802,7 +1806,7 @@ write.csv(outcomes, paste(your_pathname, "/data/cost_r_zoom_iterations", Sys.Dat
 
 # get data
 # if you want to access data from an earlier simulation, set the date to the day it was created (format YYYY-MM-DD), otherwise use Sys.Date()
-date = Sys.Date()
+date = "2026-11-22"
 outcomes = read.csv(paste(your_pathname, "/data/cost_r_zoom_iterations", date, ".csv", sep = ""))
 
 # treat cost_r as a categorical axis 
@@ -1871,7 +1875,7 @@ P_prod <- 1.5
 no_replicates <- 100
 
 # set parameters to vary
-induction_prob = seq(0.6, 0.7, by = 0.01)
+induction_prob = seq(0.3, 0.5, by = 0.02)
 cost_r = 0.1
 
 # initialize data table - where to collect the results
@@ -1947,7 +1951,7 @@ write.csv(outcomes, paste(your_pathname, "/data/induction_prob_zoom_iterations",
 
 # get data
 # if you want to access data from an earlier simulation, set the date to the day it was created (format YYYY-MM-DD), otherwise use Sys.Date()
-date = Sys.Date()
+date = "2026-11-25"
 outcomes = read.csv(paste(your_pathname, "/data/induction_prob_zoom_iterations", date, ".csv", sep = ""))
 
 # treat induction_prob as a categorical axis
