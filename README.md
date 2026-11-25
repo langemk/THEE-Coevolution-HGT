@@ -22,10 +22,11 @@ The model asks under which conditions the bacterial population is rescued and if
 project/
 ├── README.md                  this file
 └── THEE_bacteria_phage.Rmd    main notebook (model, simulations, plots)
+└── THEE_bacteria_phage.htlm   knitted html notebook
 └── AI_prompts.docx            file with AI prompt used to make the project
 └── Model_Figure.png           figure of one generation life cycle in the model
 └── data                       folder with data generated for analysis 
-                               (all analysis chunk runs save data with current date in this folder unless uncommented)
+                               (all analysis chunk runs save data with current date in this folder if eval = T)
 ```
 
 | Piece | What it does |
