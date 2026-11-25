@@ -309,7 +309,7 @@ ggplot(
   )
 
 ```
-*Figure 2: Population trajectories with both resistant and lysogen strategies with set model parameters (see model overview), `induction_prob` = 0.48 and `cost_r`= 0.35. `t_max`is set at 200 for better resolution. Here, the outcome would be resistance persisting.*
+*Figure 2: Exemplary population trajectories with both resistant and lysogen strategies with `induction_prob` = 0.48 and `cost_r`= 0.35. The other model parameters were set as given in the List of variables and parameters (2. Model and Methods). `t_max`is set at 200 for better resolution. Here, the outcome would be resistance persisting.*
 
 ## 3.  Analysis 
 ### Varying induction_prob and cost_r
@@ -643,30 +643,29 @@ ggplot(props, aes(x = cost_r, y = prop, fill = outcome)) +
 ```
 *Figure 5: Barplot of outcome proportions for varying `cost_r` and fixed `induction_prob`. 100 simulations for each `cost_r` increasing from 0.05 to 0.95 (by steps of 0.15), a fixed `induction_prob`= 0.46 and set model parameters (List of variables and parameters in 2. Model and Methods) were run and the outcomes recorded. The percentage of each outcome for each value of `cost_r` is shown.*
 
-Looking at Fig. 3 and 4., two different behaviors of the two strategies become apparent: The lysogen outcome probability is constantly comparatively high (100% of outcomes in 15/21 tiles where lysogen is an outcome,  no less than 27% overall) and abruptly decreases to 0% above a threshold between 0.35 and 0.5 in Figure 3 (dropping from 23% to 0% within a 0.02 increase of `induction_prob`; Supplementary Figure 11). The resistant outcome probability is comparatively lower (not more than 77% of outcomes) and has a gradual decrease with increasing cost of r (gradually decreasing from 39% to 0% over a 0.1 increase of `cost_r`; Supplementary Figure 10). In addition, there is also an effect of  `induction_prob` on the resistant outcomes: the higher `cost_r`, the higher `induction_prob` (i.e., the cost for the lysogen) needs to be for the resistant strategy to have a chance to establish itself (although never more than in 77% of cases, and decreasing from left to right). This makes for the diagonal pattern in Figure 4. Combined, this results in a survivability heatmap (Supplementary Figure 9) that has a  gradual decrease from left to right (increasing `cost_r`) above the induction threshold but quite an abrupt drop from bottom to top (increasing `induction_prob`). 
+Looking at Fig. 3 and 4., two different behaviors of the two strategies become apparent: The lysogen outcome probability is constantly comparatively high (100% of outcomes in 15/21 tiles where lysogen is an outcome,  no less than 27% overall) and abruptly decreases to 0% above a threshold between 0.35 and 0.5 in Figure 3 (dropping from 23% to 0% within a 0.02 increase of `induction_prob` when `cost_r`= 0.1; Supplementary Figure 7). The resistant outcome probability is comparatively lower (not more than 77% of outcomes) and has a gradual decrease with increasing cost of r, as can be seen in Figure 4 and 5 (gradually decreasing from 39% to 0% over a 0.1 increase of `cost_r`; Supplementary Figure 6). In addition, there is also an effect of  `induction_prob` on the resistant outcomes: the higher `cost_r`, the higher `induction_prob` (i.e., the cost for the lysogen) needs to be for the resistant strategy to have a chance to establish itself (although never more than in 77% of cases, and decreasing from left to right). This makes for the diagonal pattern in Figure 4. Combined, this results in a survivability heatmap (Supplementary Figure 9) that has a  gradual decrease from left to right (increasing `cost_r`) above the induction threshold but quite an abrupt drop from bottom to top (increasing `induction_prob`). 
 
-When looking at the distribution of outcomes when only one variable is varied, the limitations of the resistant strategy become apparent. When only the induction probability is increased (`cost_r` fixed at 0.1), the proportions of resistant outcomes fluctuates between 73 and 59%, while the extinction probability increases from 0 to 41% (Supplementary Figure 11). With increasing cost of r (`induction_prob` constant at 0.46), the resistant outcomes decrease gradually while the proportion of lysogen increases (from 37% to a maximum of 76%; Supplementary Figure 10). The extinction proportion only mildly increases from 12% to a maximum of 30% (Supplementary Figure 10). With no lysogen outcomes possible, the resistant to extinction outcomes stabilize at 59-71% to 29-41% (Supplementary Figure 5 and Supplementary Figure 11). With no resistant outcomes possible, the lysogen to extinction outcomes stabilize at 70-79% to 21-30% (Figure 5 and Supplementary Figure 10)
+When looking at the distribution of outcomes when only one variable is varied, the limitations of the resistant strategy become apparent. When only the induction probability is increased (`cost_r` fixed at 0.1), the proportions of resistant outcomes fluctuates between 73 and 59%, while the extinction probability increases from 0 to 41% (Supplementary Figure 7). With increasing cost of r (`induction_prob` constant at 0.46), the resistant outcomes decrease gradually while the proportion of lysogen increases (from 37% to a maximum of 76%; Supplementary Figure 6). The extinction proportion only mildly increases from 12% to a maximum of 30% (Supplementary Figure 6). With no lysogen outcomes due to too high costs, the resistant to extinction outcomes stabilize at 59-71% to 29-41% (Supplementary Figure 5). With no resistant outcomes possible due to too high costs, the lysogen to extinction outcomes stabilize at 70-79% to 21-30% (Figure 5).
 
 ## 5. Discussion
 
-The rescuing probability by the resistant strategy seems to be more density-dependent than the lysogen strategy: its outcome probability is not only dependent on the cost of r but also the induction probability, i.e., the fitness of the lysogen. The higher the cost for resistant, the higher the fitness cost for lysogen need to be for the resistant to have a chance to establish. However, the resistant outcomes are limited to a maximum of 77% even when the cost for lysogeny is high; some outcomes end in extinction. A higher fitness cost for lysogen does not come at an advantage for  resistant but results in increased extinction.
-In contrast, the lysogen strategy success is more dependent on its own fitness: above a certain threshold, it performs well throughout (more than 50% of outcomes). Under this fitness threshold, the lysogen outcome probability drops to 0 (see Figure 3 and Supplementary Figure 5). Overall, the lysogen strategy performs much better: under its fitness threshold, it dominates regardless of how low the fitness cost is for the resistant strategy.
-This might be due to the differences in phage dependency: the resistant strategy is phage-independent and arises through mutation (at a set mutation rate). The number of offspring is stochastic depending on the mutation rate. The lysogen strategy depends on a probability of integration which is multiplied by the phage population, giving the lysogen population a "boost". Up to a certain threshold of induction probability, the lysogen have a positive feedback loop: with every induction (i.e., death of a lysogen), more phages are produced which in turn increase the integration and hence creation of new lysogens. This removes the stochastic aspect and makes the growth of the lysogen population deterministic until a threshold where the integration probability becomes too high.
+The rescuing probability by the resistant strategy seems to be less competitive than the lysogen strategy: its outcome probability is not only dependent on the cost of r but also the induction probability, i.e., the fitness of the lysogen. The higher the cost for resistant, the higher the fitness cost for lysogen needs to be for the resistant to have a chance to establish. However, the resistant outcomes are limited to a maximum of 77% even when the cost for lysogeny is high; a higher fitness cost for lysogen does not come at an advantage for  resistant but results in increased extinction. In contrast, the lysogen strategy success is more dependent on its own fitness: above a certain threshold, it performs well throughout. Under this fitness threshold, the lysogen outcome probability abruptly drops to 0 (see Figure 3 and Supplementary Figure 5). Overall, the lysogen strategy performs much better: under its fitness threshold, it can emerge and persist regardless of how low the fitness cost is for the resistant strategy.
+This might be due to the differences in phage dependency: the resistant strategy is phage-independent and arises through mutation (at a set mutation rate). The number of offspring is stochastic depending on the mutation rate. The lysogen strategy depends on a probability of integration which is multiplied by the phage population. Up to a certain threshold of induction probability, the lysogen have a positive feedback loop: with every induction (i.e., death of a lysogen), more phages are produced which in turn increase the integration and hence creation of new lysogens. This removes the stochastic aspect and makes the growth of the lysogen population deterministic until a threshold where the integration probability becomes too high.
 
 ### Implications for phage therapy
-Phage therapy fails when the pathogen is rescued by adaptation, so it can be analysed like any other case of evolutionary rescue. Alexander et al. (2014) highlight that the dynamics are very similar to those in conservation biology and that rescue theory should be applied in medicine as well. In our model, rescue depends on how often a strategy arises (mutation or integration), on its fitness cost and on stochastic loss while rare. Three implications follow. They are hypotheses from a simplified model, not predictions.
+Phage therapy fails when the pathogen is rescued by adaptation, so it can be analysed like any other case of evolutionary rescue. Alexander et al. (2014) highlight that the dynamics are very similar to those in conservation biology and that rescue theory should be applied in medicine as well. In our model, rescue depends on how often a strategy arises (mutation or integration), on its fitness cost and on stochastic loss. Three implications follow. These are hypotheses from a simplified model, not predictions.
 
 **1. Temperate phages can protect bacteria instead of killing them.**
-When the dormant phage is stable (low `induction_prob`), lysogeny was the most common route to rescue (Figure 3). Because integration scales with phage density, adding phages fuels a positive feedback loop (induction, more phages, more integration, more lysogeny). A phage that can integrate may therefore turn the therapeutic agent into a protective element for the bacteria. This is consistent with the general preference for strictly lytic phages in therapy. 
+When the dormant phage is stable (low `induction_prob`), lysogeny was the most common route to rescue (Figure 3). Because integration scales with phage density, adding phages fuels a positive feedback loop (induction, more phages, more integration, more lysogeny). A lysogenic phage may therefore turn the therapeutic agent into a protective element for the bacteria. This is consistent with the general preference for strictly lytic phages in therapy. 
 
-**2. Unstable lysogeny makes phages more reliable.**
-Lysogen success collapses abruptly above an induction threshold (about 0.65; Figure 3). Above it, the extinction fraction was constant at 67%. Phage whose prophage state is readily induced, or is lethal to the host, should therefore be much less likely to be exploited by lysogeny.
+**2. Unstable lysogeny makes phage lethality more reliable.**
+Lysogen success collapses abruptly above an induction threshold (between 0.35 and 0.5; Figure 3). Above it, extinction occurs in more than 23% throughout and often in 100% of cases. Phages whose prophage state is readily induced (i.e., unstable lysogeny), or is lethal to the host (i.e, temperate phages), should therefore be much less likely to maintain bacterial populations instead of exterminating them.
 
 **3. Resistance remains the robust escape route.**
-Resistance was a less frequent outcome than lysogeny, but it declined only gradually with increasing cost: from 71 to 42% of replicates before dropping to 0 (Figure 4). A moderate cost of resistance is therefore not enough to prevent rescue by resistance. Even without lysogeny, phage therapy can thus be expected to fail in a substantial fraction of cases whenever resistant mutants arise, unless resistance is very costly. 
+Resistance was a less frequent outcome than lysogeny, but it declined only gradually with increasing cost: from 71 to 42% of replicates before dropping to 0 (Figure 5). A moderate cost of resistance is therefore not enough to prevent rescue by resistance. Even without a lysogeny strategy or with high fitness costs, phage therapy can thus be expected to fail in a substantial fraction of cases whenever resistant mutants arise, unless resistance is very costly. 
 
 ### Limitations
-Our model is a very simplified depiction of bacteria-phage interactions and isn't parameterized with empirical data. 
+Our model is a very simplified depiction of bacteria-phage interactions and is not parameterized with empirical data. 
 
 - Only two strategies and these are rigid. There is no coevolution (arms race) between bacteria and phages, not other defense mechanisms and no spatial structure.
 - Temperate phages are usually avoided in therapy (Karamlou 2025). The lysogen strategy is therefore most relevant for unintended temperate phages or engineered phages and the model is better seen as a thought experiment.
@@ -712,7 +711,7 @@ For debugging and implementing concepts, suggestions from Claude and ChatGPT wer
 For visuals (plots and layout), whole code blocks were copied. The outputs were checked visually (i.e., whether they generated what we imagined). 
 
 ## 9. Supplementary data and figures
-### 9.1. Population trajectories with different strategies
+### 9.1. Exemplary population trajectories with different strategies
 Here we plot population trajectories with 1) both strategies, 2) no strategies, 3) only lysogeny (no resistance) and 4) only resistance (no lysogeny) for illustration purposes.
 
 ```{r all strategies, echo = F, fig.align = "center"}
@@ -791,10 +790,10 @@ ggplot(
   scale_colour_manual(
     values = c(
       "Total population" = "black",
-      "Wild type" = "#E69F00",
+      "Wild type" = "#CC79A7",
       "Resistant" = "#0072B2",
       "Lysogenic" = "#009E73",
-      "Phages" = "#CC79A7"
+      "Phages" = "#E69F00"
     )
   ) +
   scale_linetype_manual(
@@ -910,10 +909,10 @@ ggplot(
   scale_colour_manual(
     values = c(
       "Total population" = "black",
-      "Wild type" = "#E69F00",
+      "Wild type" = "#CC79A7",
       "Resistant" = "#0072B2",
       "Lysogenic" = "#009E73",
-      "Phages" = "#CC79A7"
+      "Phages" = "#E69F00"
     )
   ) +
   scale_linetype_manual(
@@ -958,7 +957,7 @@ ggplot(
 ```{r No resistance, echo =F, fig.align = "center"}
 # simulation and plotting with only one survival strategy: lysogeny (no resistance)
 
-max_gen <- 2000
+max_gen <- 500
 N_init_wt <- 100
 N_init_r <- 0
 N_init_l <- 0
@@ -1029,10 +1028,10 @@ ggplot(
   scale_colour_manual(
     values = c(
       "Total population" = "black",
-      "Wild type" = "#E69F00",
+      "Wild type" = "#CC79A7",
       "Resistant" = "#0072B2",
       "Lysogenic" = "#009E73",
-      "Phages" = "#CC79A7"
+      "Phages" = "#E69F00"
     )
   ) +
   scale_linetype_manual(
@@ -1077,23 +1076,23 @@ ggplot(
 # simulation and plotting with only one survival strategy: resistance (no lysogeny)
 
 
-max_gen <- 2000
+max_gen <- 500
 
 N_init_wt <- 100
 N_init_r <- 0
 N_init_l <- 0
 N_init_p <- 1
 infection_prob <- 0.01
-lysogen_prob <- 0.002
+lysogen_prob <- 0
 growth_rate <- 1.5
-mut_rate <- 0.002 
+mut_rate <- 0.01 
 K <- 2000
 P_decline <- -0.5
 P_prod <- 1.5
 
 # set parameters to vary
 induction_prob = 0.35
-cost_r = 0.35
+cost_r = 0.01
 
 set.seed(10)
 # create your simulation data
@@ -1149,10 +1148,10 @@ ggplot(
   scale_colour_manual(
     values = c(
       "Total population" = "black",
-      "Wild type" = "#E69F00",
+      "Wild type" = "#CC79A7",
       "Resistant" = "#0072B2",
       "Lysogenic" = "#009E73",
-      "Phages" = "#CC79A7"
+      "Phages" = "#E69F00"
     )
   ) +
   scale_linetype_manual(
@@ -1191,7 +1190,7 @@ ggplot(
 
 ```
 
-*Supplementary Figure 4: Population trajectories with only resistant strategy with set model parameters (see model overview), `lysogen_prob` = 0, `mut_rate` = 0.002 and `cost_r` = 0.35*
+*Supplementary Figure 4: Population trajectories with only resistant strategy with set model parameters (see model overview), `lysogen_prob` = 0, `mut_rate` = 0.01 and `cost_r` = 0.1*
 
 ### 9.2. Supplementary Analysis: 
 #### Effects of induction_prob only
@@ -1343,372 +1342,7 @@ ggplot(props, aes(x = induction_prob, y = prop, fill = outcome)) +
 
 *Supplementary Figure 5: Barplot of outcome proportions of 100 simulation replicates with varying `induction_prob`, `cost_r`= 0.1 and set model parameters (see model overview)*
 
-
-#### Effects of varying cost_r with no lysogeny
-```{r cost_r iterations NO L, echo = F, eval = F}
-# set some parameters to fixed values
-# set t_max to a value to be used throughout
-max_gen <- 2000
-
-N_init_wt <- 100
-N_init_r <- 0
-N_init_l <- 0
-N_init_p <- 1
-infection_prob <- 0.01
-lysogen_prob <- 0
-growth_rate <- 1.5
-mut_rate <- 0.002
-K <- 2000
-P_decline <- -0.5
-P_prod <- 1.5
-
-# determine how often to run the simulation for each set of parameters
-no_replicates <- 100
-
-# set parameters to vary
-induction_prob = 0.46
-cost_r = seq(0.05, 0.95, by = 0.3)
-
-# initialize data table - where to collect the results
- data_table <- c()
-
- # set seed for reproducibility
- set.seed(10)
-
-# run the simulation across  chosen parameter: cost_r
-  # loop over selection coefficients
-  for(cval in cost_r){
-    # different way of running many simulations: make replicates using "repeat" function with a counter i
-    # reset counter
-    i<-1
-    repeat {
-      # increase counter by one
-      i<-i+1
-      # set seed inside loop to recreate single trajectories. for debugging/checking only
-      #set.seed(i) 
-      seed = i
-      # run the simulation once with changing parameter
-      one_run <- simulate_pop(N_init_wt, N_init_r, N_init_l, N_init_p, infection_prob, induction_prob, lysogen_prob, mut_rate, cval, growth_rate, max_gen, K, P_decline, P_prod)
-      
-      # Record population sizes at the final simulated generation
-      final_sizes <- as.numeric(tail(one_run, 1))
-      
-      # add current result of current iteration to datatable
-      data_table <- rbind(data_table,c(cval,final_sizes[1],final_sizes[2],final_sizes[3],final_sizes[4], seed )) # note that we add the varying parameters to the table too
-
-      # stop the repeated computation after no_replicates times
-      if(i>no_replicates) break
-    }
-}
-# define column names of data table
-colnames(data_table) <- c("cost_r", "wt", "r", "l", "p", "seed")
-# show the first lines of the output
-print(head(data_table))
-
-
-## determine outcomes
-# convert to dataframe
-outcomes = as.data.frame(data_table)
-outcomes$outcome <- NA_character_
-
-for (i in seq_len(nrow(outcomes))) {
-  wt <- outcomes[i, "wt"]
-  r  <- outcomes[i, "r"]
-  l  <- outcomes[i, "l"]
-  seed = outcomes [i, "seed"]
-
-  if (wt == 0 & r == 0 & l == 0) {
-    outcomes$outcome[i] <- "extinction"
-  } else if (wt > 0 & r == 0 & l == 0) {
-    outcomes$outcome[i] <- "wt wins"
-  } else if (r > 0 & wt == 0 & l == 0) {
-    outcomes$outcome[i] <- "r wins"
-  } else if (l > 0 & wt == 0 & r == 0) {
-    outcomes$outcome[i] <- "l wins"
-  } else {
-    outcomes$outcome[i] <- "temporary coexistence"
-  }
-}
-
-print(head(outcomes))
-
-# save data with today's date. any data generated on the same date will overwrite this file
-write.csv(outcomes, paste(your_pathname, "/data/cost_r_iterations_NO_L", Sys.Date(), ".csv", sep = ""))
-```
-
-
-```{r cost_r iterations NO L plots, echo = F, fig.align = "center"}
-## plot outcomes of cost_r iterations (NO LYSOGENY)
-
-# get data
-# if you want to access data from an earlier simulation, set the date to the day it was created (format YYYY-MM-DD), otherwise use Sys.date()
-date = "2026-11-22"
-outcomes = read.csv(paste(your_pathname, "/data/cost_r_iterations_NO_L", date, ".csv", sep = ""))
-
-# treat cost_r as a categorical axis
-outcomes$cost_r <- factor(outcomes$cost_r)
-
-# fix the order of the five outcomes so colours are consistent
-outcomes$outcome <- factor(outcomes$outcome,
-  levels = c("extinction", "wt wins", "r wins", "l wins", "temporary coexistence"))
-
- # define colors
-pal <- c("extinction"            = "grey50",
-         "wt wins"               = "#CC79A7",
-         "r wins"                = "#0072B2",
-         "l wins"                = "#009E73",
-         "temporary coexistence" = "#F0E442")
-
-# proportion of each outcome per cost_r
-props <- outcomes %>%
-  count(cost_r, outcome, .drop = FALSE) %>%
-  group_by(cost_r) %>%
-  mutate(prop = n / sum(n)) %>%
-  ungroup() %>%
-  filter(n > 0)          # no labels for outcomes that never occur
-
-# barplot with percentage labels
-props$outcome <- factor(props$outcome, levels = names(pal))
-props <- tidyr::complete(props, cost_r, outcome, fill = list(prop = 0))
-ggplot(props, aes(x = cost_r, y = prop, fill = outcome)) +
-  geom_col(position = position_fill(reverse = TRUE)) +
-  geom_text(aes(label = ifelse(prop > 0, scales::percent(prop, accuracy = 1), ""),
-                colour = outcome == "r wins",
-                group  = outcome),
-            position = position_fill(vjust = 0.5, reverse = TRUE),
-            size = 3.5, show.legend = FALSE) +
-  scale_colour_manual(values = c("TRUE" = "white", "FALSE" = "black")) +
-  scale_y_continuous(labels = scales::percent) +
-  scale_fill_manual(values = pal, drop = FALSE) +
-  labs(x = "Cost of resistance (cost_r)",
-       y = "Proportion of replicates",
-       fill = "Outcome") +
-  theme_minimal() +
-  ggtitle(wrap_title("Outcome proportions with different cost_r and NO LYSOGENY")) +
-  theme(plot.title.position = "plot")
-```
-
-*Supplementary Figure 6: Barplot of outcome proportions of 100 simulation replicates with varying `cost_r`, no lysogeny (`lysogen_prob` = 0) and set model parameters (see model overview)*
-
-
-#### Effect of varying induction_prob with no resistance
-```{r induction_prob iterations NO R, echo = F, eval = F}
-# set some parameters to fixed values
-# set t_max to a value to be used throughout
-max_gen <- 2000
-
-N_init_wt <- 100
-N_init_r <- 0
-N_init_l <- 0
-N_init_p <- 1
-infection_prob <- 0.01
-lysogen_prob <- 0.002
-growth_rate <- 1.5
-mut_rate <- 0.002
-K <- 2000
-P_decline <- -0.5
-P_prod <- 1.5
-
-# determine how often to run the simulation for each set of parameters
-no_replicates <- 100
-
-# set parameters to vary
-induction_prob = seq(0.05, 0.95, by = 0.3)
-cost_r = 0.1
-
-# initialize data table - where to collect the results
- data_table <- c()
-
- # set seed for reproducibility
-  set.seed(10)
-
-# run the simulation across  chosen parameter: induction_prob
-  # loop over selection coefficients
-  for(ival in induction_prob){
-    # different way of running many simulations: make replicates using "repeat" function with a counter i
-    # reset counter
-    i<-1
-    repeat {
-      # increase counter by one
-      i<-i+1
-       # set seed inside loop to recreate single trajectories. for debugging/checking only
-      #set.seed(i) 
-      seed = i
-      # run the simulation once with changing parameter
-      one_run <- simulate_pop(N_init_wt, N_init_r, N_init_l, N_init_p, infection_prob, ival, lysogen_prob, mut_rate, cost_r, growth_rate, max_gen, K, P_decline, P_prod)
-      
-      # Record population sizes at the final simulated generation
-      final_sizes <- as.numeric(tail(one_run, 1))
-      
-      # add current result of current iteration to datatable
-      data_table <- rbind(data_table,c(ival,final_sizes[1],final_sizes[2],final_sizes[3],final_sizes[4], seed )) # note that we add the varying parameters to the table too
-
-      # stop the repeated computation after no_replicates times
-      if(i>no_replicates) break
-    }
-}
-# define column names of data table
-colnames(data_table) <- c("induction_prob", "wt", "r", "l", "p", "seed")
-# show the first lines of the output
-print(head(data_table))
-
-
-## determine outcomes
-# convert to dataframe
-outcomes = as.data.frame(data_table)
-outcomes$outcome <- NA_character_
-
-for (i in seq_len(nrow(outcomes))) {
-  wt <- outcomes[i, "wt"]
-  r  <- outcomes[i, "r"]
-  l  <- outcomes[i, "l"]
-  seed = outcomes [i, "seed"]
-
-  if (wt == 0 & r == 0 & l == 0) {
-    outcomes$outcome[i] <- "extinction"
-  } else if (wt > 0 & r == 0 & l == 0) {
-    outcomes$outcome[i] <- "wt wins"
-  } else if (r > 0 & wt == 0 & l == 0) {
-    outcomes$outcome[i] <- "r wins"
-  } else if (l > 0 & wt == 0 & r == 0) {
-    outcomes$outcome[i] <- "l wins"
-  } else {
-    outcomes$outcome[i] <- "temporary coexistence"
-  }
-}
-
-print(head(outcomes))
-
-# save data with today's date. any data generated on the same date will overwrite this file
-write.csv(outcomes, paste(your_pathname, "/data/induction_prob_iterations_NO_R", Sys.Date(), ".csv", sep = ""))
-```
-
-
-```{r induction_prob iterations NO R plots, echo = F, fig.align = "center"}
-## plot outcomes of cost_r iterations (NO LYSOGENY)
-
-# get data
-# if you want to access data from an earlier simulation, set the date to the day it was created (format YYYY-MM-DD), otherwise use Sys.date()
-date = "2026-11-22"
-outcomes = read.csv(paste(your_pathname, "/data/induction_prob_iterations_NO_R", date, ".csv", sep = ""))
-
-# treat induction_prob as a categorical axis
-outcomes$induction_prob <- factor(outcomes$induction_prob)
-
-
-# fix the order of the five outcomes so colours are consistent
-outcomes$outcome <- factor(outcomes$outcome,
-  levels = c("extinction", "wt wins", "r wins", "l wins", "temporary coexistence"))
-
-pal <- c("extinction"            = "grey50",
-         "wt wins"               = "#CC79A7",
-         "r wins"                = "#0072B2",
-         "l wins"                = "#009E73",
-         "temporary coexistence" = "#F0E442")
-
-# proportion of each outcome per induction_prob
-props <- outcomes %>%
-  count(induction_prob, outcome, .drop = FALSE) %>%
-  group_by(induction_prob) %>%
-  mutate(prop = n / sum(n)) %>%
-  ungroup() %>%
-  filter(n > 0)          # no labels for outcomes that never occur
-
-# barplot with percentage labels
-props$outcome <- factor(props$outcome, levels = names(pal))
-props <- tidyr::complete(props, induction_prob, outcome, fill = list(prop = 0))
-ggplot(props, aes(x = induction_prob, y = prop, fill = outcome)) +
-  geom_col(position = position_fill(reverse = TRUE)) +
-  geom_text(aes(label = ifelse(prop > 0, scales::percent(prop, accuracy = 1), ""),
-                colour = outcome == "r wins",
-                group = outcome),
-            position = position_fill(vjust = 0.5, reverse = TRUE),
-            size = 3.5, show.legend = FALSE) +
-  scale_colour_manual(values = c("TRUE" = "white", "FALSE" = "black")) +
-  scale_y_continuous(labels = scales::percent) +
-  scale_fill_manual(values = pal, drop = FALSE) +
-  labs(x = "Induction probability (induction_prob)",
-       y = "Proportion of replicates",
-       fill = "Outcome") +
-  theme_minimal() +
-  ggtitle(wrap_title("Outcome proportions with different induction_prob and NO RESISTANCE")) +
-  theme(plot.title.position = "plot")
-
-```
-
-*Supplementary Figure 7: Barplot of outcome proportions of 100 simulation replicates with varying `induction_prob`, no resistance (`mut_rate` = 0) and set model parameters (see model overview)*
-
-
-### 9.3. Supplementary heat maps of the combined analysis
-These heat maps belong to the combined grid analysis shown in the main text (Figures 2 & 3). The data are read in again because "outcomes" is overwritten by the simulations above.
-
-```{r heat maps prep supplementary, echo = F}
-# get data
-# if you want to access data from an earlier simulation, set the date to the day it was created (format YYYY-MM-DD), otherwise use Sys.date()
-date = "2026-11-22"
-outcomes = read.csv(paste(your_pathname, "/data/combined_r_l_data", date, ".csv", sep = ""))
-
-## plot outcomes
-
-# treat parameters as a categorical axis
-outcomes$induction_prob <- factor(outcomes$induction_prob)
-outcomes$cost_r = factor(outcomes$cost_r)
-
-# fix the order of the five outcomes so colours are consistent
-outcomes$outcome <- factor(outcomes$outcome,
-  levels = c("extinction", "wt wins", "r wins", "l wins", "temporary coexistence"))
-```
-
-```{r heat map extinction, echo = F, fig.align = "center"}
-## heat map for extinction (Claude)
-
-# extinction probability per parameter combination
-ext <- outcomes %>%
-  group_by(induction_prob, cost_r) %>%
-  summarise(p_ext = mean(outcome == "extinction"),
-            n_runs = n(),
-            .groups = "drop")
-
-ggplot(ext, aes(x = cost_r, y = induction_prob, fill = p_ext)) +
-  geom_tile(colour = "white", linewidth = 0.8) +
-  geom_text(aes(label = sprintf("%.2f", p_ext)), size = 4) +
-  scale_fill_gradient(low = "white", high = "#D55E00",
-                      limits = c(0, 1), name = "P(extinction)") +
-  labs(x = "Cost of resistance (cost_r)",
-       y = "Induction probability (induction_prob)") +
-  coord_equal() +
-  theme_minimal() +
-  ggtitle(wrap_title("Probability of extinction")) +
-  theme(plot.title.position = "plot")
-```
-
-*Supplementary Figure 8: Heat map of probability of extinction of the total population*
-
-```{r heat map survival/rescue, echo = F, fig.align = "center"}
-## heat map for survival/rescue of total population
-# survival probability per parameter combination
-surv = outcomes %>%
-  group_by(induction_prob, cost_r) %>%
-  summarise(p_surv = mean(outcome != "extinction"),
-            n_runs = n(),
-            .groups = "drop")
-
-ggplot(surv, aes(x = cost_r, y = induction_prob, fill = p_surv)) +
-  geom_tile(colour = "white", linewidth = 0.8) +
-  geom_text(aes(label = sprintf("%.2f", p_surv)), size = 4) +
-  scale_fill_gradient(low = "white", high = "purple",
-                      limits = c(0, 1), name = "P(rescue)") +
-  labs(x = "Cost of resistance (cost_r)",
-       y = "Induction probability (induction_prob)") +
-  coord_equal() +
-  theme_minimal() +
-  ggtitle(wrap_title("Probability of rescue of total population")) +
-  theme(plot.title.position = "plot")
-```
-
-*Supplementary Figure 9: Heat map of probability of survival of the total population (= 1 - extinction; this counts every outcome except extinction, including wt wins and temporary coexistence)*
-
-### 9.4. Supplementary "zoom-in" into varying cost-r and induction_prob
+#### "Zoom-ins" of varied cost_r and induction_prob
 
 ```{r cost_r zoom iterations, echo = F, eval = F}
 # set some parameters to fixed values
@@ -1851,10 +1485,10 @@ ggplot(props, aes(x = cost_r, y = prop, fill = outcome)) +
   theme(plot.title.position = "plot")
 ```
 
-*Supplementary Figure 10: Barplot of outcome proportions for varying `cost_r` and fixed `induction_prob`. 100 simulations for each `cost_r` increasing from 0.3 to 0.5 (by steps of 0.02), a fixed `induction_prob`= 0.46 and set model parameters (List of variables and parameters in 2. Model and Methods) were run and the outcomes recorded. The percentage of each outcome for each value of `cost_r` is visualized.*
+*Supplementary Figure 6: Barplot of outcome proportions for varying `cost_r` and fixed `induction_prob`. 100 simulations for each `cost_r` increasing from 0.3 to 0.5 (by steps of 0.02), a fixed `induction_prob`= 0.46 and set model parameters (List of variables and parameters in 2. Model and Methods) were run and the outcomes recorded. The percentage of each outcome for each value of `cost_r` is visualized.*
 
 
-```{r induction_prob zoom iterations, echo = F, eval = T}
+```{r induction_prob zoom iterations, echo = F, eval = F}
 # set some parameters to fixed values
 # set t_max to a value to be used throughout
 max_gen <- 2000
@@ -1998,4 +1632,74 @@ ggplot(props, aes(x = induction_prob, y = prop, fill = outcome)) +
 
 ```
 
-*Supplementary Figure 11: Barplot of outcome proportions for varying `induction_prob` and fixed `cost_r`. 100 simulations for each `induction_prob` increasing from 0.6 to 0.7 (by steps of 0.01), a fixed `cost_r` = 0.1 and set model parameters (List of variables and parameters in 2. Model and Methods) were run and the outcomes recorded. The percentage of each outcome for each value of `induction_prob` is visualized.*
+*Supplementary Figure 7: Barplot of outcome proportions for varying `induction_prob` and fixed `cost_r`. 100 simulations for each `induction_prob` increasing from 0.6 to 0.7 (by steps of 0.01), a fixed `cost_r` = 0.1 and set model parameters (List of variables and parameters in 2. Model and Methods) were run and the outcomes recorded. The percentage of each outcome for each value of `induction_prob` is visualized.*
+
+### 9.3. Supplementary heat maps of the combined analysis
+These heat maps belong to the combined grid analysis shown in the main text (Figures 2 & 3). The data are read in again because "outcomes" is overwritten by the simulations above.
+
+```{r heat maps prep supplementary, echo = F}
+# get data
+# if you want to access data from an earlier simulation, set the date to the day it was created (format YYYY-MM-DD), otherwise use Sys.date()
+date = "2026-11-22"
+outcomes = read.csv(paste(your_pathname, "/data/combined_r_l_data", date, ".csv", sep = ""))
+
+## plot outcomes
+
+# treat parameters as a categorical axis
+outcomes$induction_prob <- factor(outcomes$induction_prob)
+outcomes$cost_r = factor(outcomes$cost_r)
+
+# fix the order of the five outcomes so colours are consistent
+outcomes$outcome <- factor(outcomes$outcome,
+  levels = c("extinction", "wt wins", "r wins", "l wins", "temporary coexistence"))
+```
+
+```{r heat map extinction, echo = F, fig.align = "center"}
+## heat map for extinction (Claude)
+
+# extinction probability per parameter combination
+ext <- outcomes %>%
+  group_by(induction_prob, cost_r) %>%
+  summarise(p_ext = mean(outcome == "extinction"),
+            n_runs = n(),
+            .groups = "drop")
+
+ggplot(ext, aes(x = cost_r, y = induction_prob, fill = p_ext)) +
+  geom_tile(colour = "white", linewidth = 0.8) +
+  geom_text(aes(label = sprintf("%.2f", p_ext)), size = 4) +
+  scale_fill_gradient(low = "white", high = "#D55E00",
+                      limits = c(0, 1), name = "P(extinction)") +
+  labs(x = "Cost of resistance (cost_r)",
+       y = "Induction probability (induction_prob)") +
+  coord_equal() +
+  theme_minimal() +
+  ggtitle(wrap_title("Probability of extinction")) +
+  theme(plot.title.position = "plot")
+```
+
+*Supplementary Figure 8: Heat map of probability of extinction of the total population*
+
+```{r heat map survival/rescue, echo = F, fig.align = "center"}
+## heat map for survival/rescue of total population
+# survival probability per parameter combination
+surv = outcomes %>%
+  group_by(induction_prob, cost_r) %>%
+  summarise(p_surv = mean(outcome != "extinction"),
+            n_runs = n(),
+            .groups = "drop")
+
+ggplot(surv, aes(x = cost_r, y = induction_prob, fill = p_surv)) +
+  geom_tile(colour = "white", linewidth = 0.8) +
+  geom_text(aes(label = sprintf("%.2f", p_surv)), size = 4) +
+  scale_fill_gradient(low = "white", high = "purple",
+                      limits = c(0, 1), name = "P(rescue)") +
+  labs(x = "Cost of resistance (cost_r)",
+       y = "Induction probability (induction_prob)") +
+  coord_equal() +
+  theme_minimal() +
+  ggtitle(wrap_title("Probability of rescue of total population")) +
+  theme(plot.title.position = "plot")
+```
+
+*Supplementary Figure 9: Heat map of probability of survival of the total population (= 1 - extinction; this counts every outcome except extinction, including wt wins and temporary coexistence)*
+
